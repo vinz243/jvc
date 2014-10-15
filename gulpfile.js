@@ -13,7 +13,7 @@ var addsrc = require('gulp-add-src');
 
 var paths = {
   sass: ['./www/**/*.scss'],
-  coffee: ['./www/coffee/*.coffee'],
+  coffee: ['./www/coffee/**/*.coffee'],
   css: [
      './www/lib/semantic-ui/build/packaged/definitions/css/semantic.min.css'
   ],

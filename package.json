@@ -14,6 +14,9 @@
     "gulp-add-src": "^0.1.1",
     "gulp-coffee": "^2.2.0",
     "gulp-util": "^2.2.14",
-    "shelljs": "^0.3.0"
+    "shelljs": "^0.3.0",
+    "colors": "~1.0.3",
+    "http-proxy": "~1.5.3",
+    "connect": "~2.11.2"
   }
 }

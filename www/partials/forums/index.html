@@ -1,0 +1,29 @@
+<div class="ui basic segment" id="main-segment">
+  <div class="ui active dimmer" ng-if="loading">
+
+    <div class="ui flipping loader">
+      <div class="shape"></div>
+      Loading
+    </div>
+  </div>
+  <div ng-repeat="section in forums">
+    <div class="ui cards">
+    <div class="card">
+      <div class="content">
+        <div class="header">{{section.name}}</div>
+        <div class="description">
+               <div class="ui list">
+          <div class="ui grid">
+            <a href="/#/forums/{{sub.id}}" class="eight wide column" ng-repeat="sub in section.subsections">
+                <div class="ui item" >
+                  {{sub.nom}}
+                </div>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ </div></div>
