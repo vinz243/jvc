@@ -2,7 +2,7 @@
 
 var config, jvcApp;
 
-jvcApp = angular.module('jvc', ['ngRoute']);
+jvcApp = angular.module('jvc', ['ngRoute', 'ngMaterial']);
 
 config = {
   domain: "http://" + (window.location.host.split(':')[0]) + ":8101"
@@ -22,6 +22,12 @@ jvcApp.config([
     }).when('/forums', {
       templateUrl: 'partials/forums/index.html',
       controller: 'ForumsIndexCtrl'
+    }).when('/forums/:id/:topic', {
+      templateUrl: 'partials/forums/post.html',
+      controller: 'ForumsPostCtrl'
+    }).when('/forums/:id', {
+      templateUrl: 'partials/forums/posts.html',
+      controller: 'ForumsPostsCtrl'
     }).otherwise({
       redirectTo: '/'
     });
@@ -197,6 +203,58 @@ jvcApp.controller('ForumsIndexCtrl', [
       }
       console.log(forums);
       $scope.forums = forums;
+      $scope.loading = false;
+      if (!$scope.$$phase) {
+        $scope.$digest();
+      }
+      return console.log(list);
+    });
+  }
+]);
+
+jvcApp.controller('ForumsPostCtrl', [
+  '$scope', '$http', '$routeParams', '$sce', function($scope, $http, $routeParams, $sce) {
+    $scope.loading = true;
+    return $http.get(config.domain + '/forums/1-' + $routeParams.id + '-' + $routeParams.topic + '-1-0-1-0-0.xml').success(function(data) {
+      var $content, posts, res;
+      res = xml2json(data);
+      $scope.loading = false;
+      if (!$scope.$$phase) {
+        $scope.$digest();
+      }
+      $content = $($.parseXML("<content>" + res.detail_topic.contenu + "</content>"));
+      posts = [];
+      $content.find('ul').each(function(index) {
+        var $el, obj;
+        obj = {};
+        $el = $(this);
+        $el.find('a.pseudo').find('b').remove();
+        $el.find('.date').find('a').remove();
+        obj.author = $el.find('a.pseudo').html();
+        obj.body = $sce.trustAsHtml($el.find('.message').html());
+        obj.ts = $el.find('.date').html();
+        return posts.push(obj);
+      });
+      return $scope.posts = posts;
+    });
+  }
+]);
+
+jvcApp.controller('ForumsPostsCtrl', [
+  '$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
+    $scope.loading = true;
+    return $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-1-0-0.xml').success(function(data) {
+      var list, matched, re, topic, _i, _len, _ref;
+      list = xml2json(data);
+      _ref = list.liste_topics.topic;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        topic = _ref[_i];
+        re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
+        matched = re.exec(topic.lien_topic);
+        topic.url = "/#/forums/" + matched[1] + "/" + matched[2];
+        console.log(topic.url);
+      }
+      $scope.posts = list;
       $scope.loading = false;
       if (!$scope.$$phase) {
         $scope.$digest();

@@ -1,0 +1,14 @@
+<div class="ui basic segment" id="main-segment">
+  <div class="ui active dimmer" ng-if="loading">
+
+    <div class="ui flipping loader">
+      <div class="shape"></div>
+      Loading
+    </div>
+  </div>
+
+  <div class="ui header">{{posts.liste_topics.nom_forum}}</div>
+  <a href="{{topic.url}}" class="ui very relaxed list" ng-repeat="topic in posts.liste_topics.topic">
+    <div class="ui item">{{topic.titre}}</div>
+  </a>
+</div>

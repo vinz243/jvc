@@ -6,6 +6,11 @@
   },
   "dependencies": {
     "semantic-ui": "1.0",
-    "angular-route": "~1.2.26"
+    "angular-route": "~1.2.26",
+    "jquery": "~2.1.1",
+    "angular-material": "~0.4.1"
+  },
+  "resolutions": {
+    "angular-animate": "1.3.0-rc.4"
   }
 }

@@ -1,5 +1,5 @@
 
-jvcApp = angular.module('jvc', ['ngRoute'])
+jvcApp = angular.module('jvc', ['ngRoute', 'ngMaterial'])
 config =
   domain: "http://#{window.location.host.split(':')[0]}:8101"
 

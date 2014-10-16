@@ -18,8 +18,12 @@ var paths = {
      './www/lib/semantic-ui/build/packaged/definitions/css/semantic.min.css'
   ],
   js: [
-     './www/lib/angular-route/angular-route.min.js'
-
+    './www/lib/jquery/dist/jquery.min.js',
+    './www/lib/angular-route/angular-route.min.js',
+    './www/lib/angular-aria/angular-aria.js',
+    './www/lib/angular-animate/angular-animate.js',
+    './www/lib/hammerjs/hammer.js',
+    './www/lib/angular-material/angular-material.js'
   ]
 };
 gulp.task('default', ['sass']);
