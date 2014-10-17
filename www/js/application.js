@@ -1,8 +1,8 @@
 
 
-var config, jvcApp;
+var config, jvcApp, markaCache;
 
-jvcApp = angular.module('jvc', ['ngRoute', 'ngMaterial']);
+jvcApp = angular.module('jvc', ['ngRoute', 'ngMaterial', 'infinite-scroll']);
 
 config = {
   domain: "http://" + (window.location.host.split(':')[0]) + ":8101"
@@ -13,6 +13,42 @@ jvcApp.config([
     $httpProvider.defaults.headers.common['Authorization'] = "Basic YXBwX2FuZF9tczpEOSFtVlI0Yw==";
   }
 ]);
+
+jvcApp.directive("goClick", function($location) {
+  return function(scope, element, attrs) {
+    var path;
+    path = void 0;
+    attrs.$observe("goClick", function(val) {
+      path = val;
+    });
+    element.bind("click", function() {
+      scope.$apply(function() {
+        $location.path(path);
+      });
+    });
+  };
+});
+
+markaCache = {};
+
+jvcApp.directive("markaIcon", function($location) {
+  return function(scope, element, attrs) {
+    var $el, id;
+    $el = $(element);
+    id = $el.attr('id');
+    if (!markaCache[id]) {
+      markaCache[id] = new Marka('#' + id);
+    }
+    return attrs.$observe("markaIcon", function(val) {
+      markaCache[id].set(val.split(' ')[0]);
+      markaCache[id].color(val.split(' ')[1]);
+      markaCache[id].size(val.split(' ')[2]);
+      if (val.split(' ')[3]) {
+        markaCache[id].rotate(val.split(' ')[3]);
+      }
+    });
+  };
+});
 
 jvcApp.config([
   '$routeProvider', function($routeProvider) {
@@ -214,52 +250,92 @@ jvcApp.controller('ForumsIndexCtrl', [
 
 jvcApp.controller('ForumsPostCtrl', [
   '$scope', '$http', '$routeParams', '$sce', function($scope, $http, $routeParams, $sce) {
+    var page, pending;
     $scope.loading = true;
-    return $http.get(config.domain + '/forums/1-' + $routeParams.id + '-' + $routeParams.topic + '-1-0-1-0-0.xml').success(function(data) {
-      var $content, posts, res;
-      res = xml2json(data);
-      $scope.loading = false;
-      if (!$scope.$$phase) {
-        $scope.$digest();
+    page = 1;
+    pending = false;
+    $scope.more = true;
+    $scope.urls = {
+      back: '#/forums/' + $routeParams.id
+    };
+    $scope.loadMorePosts = function() {
+      if (!$scope.more || pending) {
+        return;
       }
-      $content = $($.parseXML("<content>" + res.detail_topic.contenu + "</content>"));
-      posts = [];
-      $content.find('ul').each(function(index) {
-        var $el, obj;
-        obj = {};
-        $el = $(this);
-        $el.find('a.pseudo').find('b').remove();
-        $el.find('.date').find('a').remove();
-        obj.author = $el.find('a.pseudo').html();
-        obj.body = $sce.trustAsHtml($el.find('.message').html());
-        obj.ts = $el.find('.date').html();
-        return posts.push(obj);
+      pending = true;
+      return $http.get(config.domain + '/forums/1-' + $routeParams.id + '-' + $routeParams.topic + '-' + page + '-0-1-0-0.xml').success(function(data) {
+        var $content, posts, res;
+        if (!data || data === "") {
+          $scope.more = false;
+          return;
+        }
+        res = xml2json(data);
+        if (!$scope.$$phase) {
+          $scope.$digest();
+        }
+        $content = $($.parseXML("<content>" + res.detail_topic.contenu + "</content>"));
+        posts = [];
+        $content.find('ul').each(function(index) {
+          var $el, obj;
+          obj = {};
+          $el = $(this);
+          $el.find('a.pseudo').find('b').remove();
+          $el.find('.date').find('a').remove();
+          $el.find('.date').find('span').replaceWith('sur <i class="icon ion-iphone"></i>');
+          obj.author = $sce.trustAsHtml($el.find('a.pseudo').html());
+          obj.body = $sce.trustAsHtml($el.find('.message').html());
+          obj.ts = $el.find('.date').html();
+          obj.title = $sce.trustAsHtml(obj.author + ' - ' + obj.ts);
+          return posts.push(obj);
+        });
+        $scope.posts = posts;
+        $scope.title = res.detail_topic.sujet_topic;
+        if (!$scope.$$phase) {
+          $scope.digest();
+        }
+        page = page + 1;
+        return pending = false;
+      }).error(function(data) {
+        $scope.more = false;
+        if (!$scope.$$phase) {
+          return $scope.digest();
+        }
       });
-      return $scope.posts = posts;
-    });
+    };
+    return $scope.loadMorePosts();
   }
 ]);
 
 jvcApp.controller('ForumsPostsCtrl', [
   '$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
+    var page;
     $scope.loading = true;
-    return $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-1-0-0.xml').success(function(data) {
-      var list, matched, re, topic, _i, _len, _ref;
-      list = xml2json(data);
-      _ref = list.liste_topics.topic;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        topic = _ref[_i];
-        re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
-        matched = re.exec(topic.lien_topic);
-        topic.url = "/#/forums/" + matched[1] + "/" + matched[2];
-        console.log(topic.url);
+    $scope.urls = {
+      back: '#/forums'
+    };
+    page = 1;
+    $scope.more = true;
+    return $scope.loadMoreTopics = function() {
+      if (!$scope.more) {
+        return;
       }
-      $scope.posts = list;
-      $scope.loading = false;
-      if (!$scope.$$phase) {
-        $scope.$digest();
-      }
-      return console.log(list);
-    });
+      return $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-' + page + '-0-0.xml').success(function(data) {
+        var list, matched, re, topic, _i, _len, _ref;
+        list = xml2json(data);
+        _ref = list.liste_topics.topic;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          topic = _ref[_i];
+          re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
+          matched = re.exec(topic.lien_topic);
+          topic.url = "/forums/" + matched[1] + "/" + matched[2];
+        }
+        $scope.posts = list;
+        $scope.loading = false;
+        if (!$scope.$$phase) {
+          $scope.$digest();
+        }
+        return page += 25;
+      });
+    };
   }
 ]);

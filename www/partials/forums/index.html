@@ -1,29 +1,31 @@
 <div class="ui basic segment" id="main-segment">
-  <div class="ui active dimmer" ng-if="loading">
+  <md-toolbar class="md-theme-light">
+    <h2 class="md-toolbar-tools">
+      <a href="{{urls.back}}"><md-button class="md-button">
+       <div class="ion ion-ios7-arrow-back"></div>
+        </md-button></a>
+        <span>Liste des forums</span>
+      </h2>
+  </md-toolbar>
+  <md-card ng-repeat="section in forums">
+    <h4>{{section.name}}</h4>
+    <md-list>
 
-    <div class="ui flipping loader">
-      <div class="shape"></div>
-      Loading
-    </div>
-  </div>
-  <div ng-repeat="section in forums">
-    <div class="ui cards">
-    <div class="card">
-      <div class="content">
-        <div class="header">{{section.name}}</div>
-        <div class="description">
-               <div class="ui list">
-          <div class="ui grid">
-            <a href="/#/forums/{{sub.id}}" class="eight wide column" ng-repeat="sub in section.subsections">
-                <div class="ui item" >
-                  {{sub.nom}}
-                </div>
-              </a>
-            </div>
+      <md-item ng-repeat="sub in section.subsections">
+        <md-item-content>
+          <a href="/#/forums/{{sub.id}}" class="eight wide column">
+               {{sub.nom}}
+            </a>
+        </md-item-content>
+      </md-item>
 
-          </div>
-        </div>
-      </div>
-    </div>
+    </md-list>
+  </md-card>
+  <div layout="horizontal" layout-align="center">
+
+
+    <md-progress-circular mode="indeterminate" ng-if="loading"></md-progress-circular>
+
   </div>
- </div></div>
+
+</div>

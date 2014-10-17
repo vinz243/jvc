@@ -15,15 +15,21 @@ var paths = {
   sass: ['./www/**/*.scss'],
   coffee: ['./www/coffee/**/*.coffee'],
   css: [
-     './www/lib/semantic-ui/build/packaged/definitions/css/semantic.min.css'
+//     './www/lib/semantic-ui/build/packaged/definitions/css/semantic.min.css'
+     './www/lib/angular-material/angular-material.min.css',
+    './www/lib/ionicons/css/ionicons.min.css'
   ],
   js: [
     './www/lib/jquery/dist/jquery.min.js',
+    './www/lib/angular/angular.js',
     './www/lib/angular-route/angular-route.min.js',
     './www/lib/angular-aria/angular-aria.js',
     './www/lib/angular-animate/angular-animate.js',
     './www/lib/hammerjs/hammer.js',
-    './www/lib/angular-material/angular-material.js'
+    './www/lib/angular-material/angular-material.min.js',
+    './www/lib/ngInfiniteScroll/build/ng-infinite-scroll.min.js',
+    "./www/lib/marka/dist/js/marka.js",
+//    './www/lib/angular-bindonce/bindonce.js',
   ]
 };
 gulp.task('default', ['sass']);

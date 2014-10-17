@@ -1,20 +1,27 @@
-<div class="ui basic segment" id="main-segment">
-  <div class="ui active dimmer" ng-if="loading">
+ <md-toolbar class="md-theme-light">
+      <h2 class="md-toolbar-tools">
+      <a ng-href="{{urls.back}}">
+       <i id="left-nav-icon" marka-icon="arrow"></i>
+      </a>
+        <span>{{title || 'Loading...'}}</span>
+      </h2>
+ </md-toolbar>
+       <i id="left-nav-icon" marka-icon="arrow #fff 25 left"></i>
+ <div infinite-scroll="loadMorePosts()" infinite-scroll-distance="0">
+  <md-content>
 
-    <div class="ui flipping loader">
-      <div class="shape"></div>
-      Loading
-    </div>
-  </div>
-  <div class="ui cards">
-    <div class="ui card" ng-repeat="post in posts">
-      <div class="content">
-        <div class="header">{{post.author}}</div>
-        <div class="meta">{{post.ts}}</div>
-        <div class="description" ng-bind-html="post.body">
+    <md-card ng-repeat="post in posts">
+      <h5 ng-bind-html="post.title"></h5>
+      <p ng-bind-html="post.body">
+      </p>
+    </md-card>
+  <div layout="horizontal" layout-align="center">
 
-        </div>
-      </div>
-    </div>
+    
+    <md-progress-circular mode="indeterminate" ng-if="more"></md-progress-circular>
+
   </div>
+
+  </md-content>
+  
 </div>
