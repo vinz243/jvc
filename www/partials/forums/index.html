@@ -1,12 +1,4 @@
 <div ng-controller="ForumsIndexCtrl">
-  <md-toolbar class="md-theme-light">
-    <h2 class="md-toolbar-tools">
-      <a ui-sref="index" ><md-button class="md-button">
-       <div class="ion ion-ios7-arrow-back"></div>
-        </md-button></a>
-        <span>Liste des forums</span>
-      </h2>
-  </md-toolbar>
   <md-card ng-repeat="section in forums">
     <h4>{{section.name}}</h4>
     <md-list>

@@ -1,17 +1,10 @@
 <div ng-controller="ForumsPostsCtrl">
- <md-toolbar class="md-theme-light">
-  <h2 class="md-toolbar-tools">
-      <a ui-sref="forums.list()">
-       <i id="left-nav-icon" marka-icon="arrow #fff 25 left"></i>
-      </a>
-        <span>{{posts.liste_topics.nom_forum || 'Loading...'}}</span>
-      </h2>
-</md-toolbar>
+
 
 <div infinite-scroll="loadMoreTopics()" infinite-scroll-distance="2">
 
 
-  <md-card ng-repeat="topic in posts.liste_topics.topic" go-click="{{topic.url}}">
+  <md-card ng-repeat="topic in posts.liste_topics.topic" ui-sref="forums.topics.view({id: {{topic.fid}}, topic: {{topic.id}}})">
       <h4>{{topic.titre}}</h4>
   </md-card>
 

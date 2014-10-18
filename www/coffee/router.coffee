@@ -15,14 +15,14 @@ jvcApp.config ['$stateProvider', '$urlRouterProvider',
       ).state('forums.topics',
         abstract: true, 
         templateUrl: 'partials/base.html',
-      ).state('forums.topics.list',
-        url: '/forums/:id',
-        templateUrl: 'partials/forums/posts.html',
-        controller: 'ForumsPostsCtrl'
       ).state('forums.topics.view',
         url: '/forums/:id/:topic',
         templateUrl: 'partials/forums/post.html',
         controller: 'ForumsPostCtrl'
+      ).state('forums.topics.list',
+        url: '/forums/:id',
+        templateUrl: 'partials/forums/posts.html',
+        controller: 'ForumsPostsCtrl'
       )
     $urlRouterProvider.otherwise '/'
       

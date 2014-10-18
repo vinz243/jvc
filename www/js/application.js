@@ -1,4 +1,4 @@
-var config, jvcApp, markaCache;
+var config, jvcApp;
 
 jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll']);
 
@@ -12,39 +12,101 @@ jvcApp.config([
   }
 ]);
 
-jvcApp.directive("goClick", function($location) {
-  return function(scope, element, attrs) {
-    var path;
-    path = void 0;
-    attrs.$observe("goClick", function(val) {
-      path = val;
-    });
-    element.bind("click", function() {
-      scope.$apply(function() {
-        $location.path(path);
-      });
-    });
+(function() {
+  var listeners, markaCache, navbar;
+  navbar = {
+    title: "...",
+    buttons: []
   };
-});
-
-markaCache = {};
-
-jvcApp.directive("markaIcon", function($location) {
-  return function(scope, element, attrs) {
-    var $el, id, marka;
-    $el = $(element);
-    id = $el.attr('id');
-    marka = new Marka('#' + id);
-    return attrs.$observe("markaIcon", function(val) {
-      marka.set(val.split(' ')[0]);
-      marka.color(val.split(' ')[1]);
-      marka.size(val.split(' ')[2]);
-      if (val.split(' ')[3]) {
-        marka.rotate(val.split(' ')[3]);
+  listeners = {};
+  jvcApp.factory("navbar", function() {
+    return {
+      setTitle: function(newTitle) {
+        var call, _i, _len, _ref, _results;
+        navbar.title = newTitle;
+        _ref = listeners.onTitle;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          call = _ref[_i];
+          _results.push(call(newTitle));
+        }
+        return _results;
+      },
+      addButton: function(opts) {
+        var call, _i, _len, _ref, _results;
+        navbar.buttons.push(opts);
+        _ref = listeners.onButton;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          call = _ref[_i];
+          _results.push(call(title));
+        }
+        return _results;
+      },
+      setNavButton: function(opts) {
+        var call, _i, _len, _ref, _results;
+        navbar.navButton = opts;
+        _ref = listeners.onNavButton;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          call = _ref[_i];
+          _results.push(call(opts));
+        }
+        return _results;
+      },
+      addHook: function(domain, func) {
+        if (!listeners[domain]) {
+          listeners[domain] = [];
+        }
+        return listeners[domain].push(func);
       }
-    });
-  };
-});
+    };
+  });
+  jvcApp.directive("goClick", [
+    '$location', '$state', function($location, $state) {
+      return function(scope, element, attrs) {
+        var params, path;
+        path = void 0;
+        params = void 0;
+        attrs.$observe("goClick", function(val) {
+          val = val.replace(/\{\{(.+)\}\}/g, function(str, val) {
+            return eval('scope.' + val);
+          });
+          val = val.replace(/\((.+)\)/, function(str, value) {
+            params = eval("(" + value + ")");
+            return "";
+          });
+          path = val;
+        });
+        element.bind("click", function() {
+          scope.$apply(function() {
+            if (path && path !== "") {
+              console.log(params);
+              $state.go(path, params);
+            }
+          });
+        });
+      };
+    }
+  ]);
+  markaCache = {};
+  return jvcApp.directive("markaIcon", function($location) {
+    return function(scope, element, attrs) {
+      var $el, id, marka;
+      $el = $(element);
+      id = $el.attr('id');
+      marka = new Marka('#' + id);
+      return attrs.$observe("markaIcon", function(val) {
+        marka.set(val.split(' ')[0]);
+        marka.color(val.split(' ')[1]);
+        marka.size(val.split(' ')[2]);
+        if (val.split(' ')[3]) {
+          marka.rotate(val.split(' ')[3]);
+        }
+      });
+    };
+  });
+})();
 
 var defaultOptions, normalize, parseXML, xml2json, xml2jsonImpl;
 
@@ -164,68 +226,100 @@ defaultOptions = {
 window.xml2json = xml2json;
 
 jvcApp.controller('IndexCtrl', [
-  '$scope', '$http', function($scope, $http) {
-    return $scope.name = "world!";
-  }
-]);
-
-
-
-jvcApp.controller('ForumsIndexCtrl', [
-  '$scope', '$http', function($scope, $http) {
-    $scope.loading = true;
-    return $http.get(config.domain + '/forums_index.xml').success(function(data) {
-      var forums, list, sec, section, sub, sublist, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _section;
-      list = xml2json(data);
-      forums = [];
-      _ref = list.listeforums.section;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        section = _ref[_i];
-        _section = {};
-        _section.name = section.nom;
-        _section.rank = section.rang;
-        _section.subsections = [];
-        sublist = [];
-        if (Array.isArray(section.sous_section)) {
-          _ref1 = section.sous_section;
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            sec = _ref1[_j];
-            if (Array.isArray(sec.ligne)) {
-              _ref2 = sec.ligne;
-              for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-                sub = _ref2[_k];
-                sublist.push(sub);
-              }
-            } else {
-              _ref3 = sec.ligne.forum;
-              for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-                sub = _ref3[_l];
-                sublist.push(sub);
-              }
-            }
-          }
-        } else if ((_ref4 = section.sous_section.ligne) != null ? _ref4.forum : void 0) {
-          sublist = section.sous_section.ligne.forum;
-        } else if (section.sous_section.ligne) {
-          sublist = section.sous_section.ligne;
-        }
-        for (_m = 0, _len4 = sublist.length; _m < _len4; _m++) {
-          sub = sublist[_m];
-          _section.subsections.push(sub);
-        }
-        forums.push(_section);
-      }
-      $scope.forums = forums;
-      $scope.loading = false;
-      if (!$scope.$$phase) {
-        return $scope.$digest();
-      }
+  '$scope', 'navbar', function($scope, navbar) {
+    navbar.setTitle('Appli JVC non officielle');
+    return navbar.setNavButton({
+      icon: 'bars'
     });
   }
 ]);
 
+(function() {
+  return jvcApp.controller("NavBarCtrl", [
+    'navbar', '$scope', function(navbar, $scope) {
+      var icon;
+      icon = new Marka($('#left-nav-icon')[0]);
+      navbar.addHook("onTitle", function(newTitle) {
+        return $scope.title = newTitle;
+      });
+      return navbar.addHook('onNavButton', function(opts) {
+        icon.set(opts.icon);
+        icon.color(opts.color || "#fff");
+        icon.size(opts.size || 30);
+        icon.rotate(opts.rotation || "up");
+        $scope.leftLink = opts.link || "";
+        if (!$scope.$$phase) {
+          return $scope.$digest();
+        }
+      });
+    }
+  ]);
+})();
+
+jvcApp.controller('ForumsIndexCtrl', [
+  '$scope', '$http', 'navbar', function($scope, $http, navbar) {
+    $scope.loading = true;
+    navbar.setTitle('Veuillez patienter...');
+    navbar.setNavButton({
+      icon: 'arrow',
+      rotation: 'left',
+      link: 'index'
+    });
+    return setTimeout(function() {
+      return $http.get(config.domain + '/forums_index.xml').success(function(data) {
+        var forums, list, sec, section, sub, sublist, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _section;
+        list = xml2json(data);
+        forums = [];
+        _ref = list.listeforums.section;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          section = _ref[_i];
+          _section = {};
+          _section.name = section.nom;
+          _section.rank = section.rang;
+          _section.subsections = [];
+          sublist = [];
+          if (Array.isArray(section.sous_section)) {
+            _ref1 = section.sous_section;
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              sec = _ref1[_j];
+              if (Array.isArray(sec.ligne)) {
+                _ref2 = sec.ligne;
+                for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+                  sub = _ref2[_k];
+                  sublist.push(sub);
+                }
+              } else {
+                _ref3 = sec.ligne.forum;
+                for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+                  sub = _ref3[_l];
+                  sublist.push(sub);
+                }
+              }
+            }
+          } else if ((_ref4 = section.sous_section.ligne) != null ? _ref4.forum : void 0) {
+            sublist = section.sous_section.ligne.forum;
+          } else if (section.sous_section.ligne) {
+            sublist = section.sous_section.ligne;
+          }
+          for (_m = 0, _len4 = sublist.length; _m < _len4; _m++) {
+            sub = sublist[_m];
+            _section.subsections.push(sub);
+          }
+          forums.push(_section);
+        }
+        $scope.forums = forums;
+        $scope.loading = false;
+        navbar.setTitle('Liste des forums');
+        if (!$scope.$$phase) {
+          return $scope.$digest();
+        }
+      });
+    }, 600);
+  }
+]);
+
 jvcApp.controller('ForumsPostCtrl', [
-  '$scope', '$http', '$stateParams', '$sce', function($scope, $http, $routeParams, $sce) {
+  '$scope', '$http', '$stateParams', '$sce', 'navbar', function($scope, $http, $routeParams, $sce, navbar) {
     var page, pending;
     $scope.loading = true;
     page = 1;
@@ -235,6 +329,12 @@ jvcApp.controller('ForumsPostCtrl', [
       back: '#/forums/' + $routeParams.id
     };
     $scope.id = $routeParams.id;
+    navbar.setTitle('Veuillez patienter...');
+    navbar.setNavButton({
+      icon: 'arrow',
+      rotation: 'left',
+      link: 'forums.topics.list({id: "' + $routeParams.id + '"})'
+    });
     $scope.loadMorePosts = function() {
       if (!$scope.more || pending) {
         return;
@@ -266,7 +366,7 @@ jvcApp.controller('ForumsPostCtrl', [
           return posts.push(obj);
         });
         $scope.posts = posts;
-        $scope.title = res.detail_topic.sujet_topic;
+        navbar.setTitle(res.detail_topic.sujet_topic);
         if (!$scope.$$phase) {
           $scope.digest();
         }
@@ -284,7 +384,7 @@ jvcApp.controller('ForumsPostCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostsCtrl', [
-  '$scope', '$http', '$stateParams', function($scope, $http, $routeParams) {
+  '$scope', '$http', '$stateParams', 'navbar', function($scope, $http, $routeParams, navbar) {
     var page;
     $scope.loading = true;
     $scope.urls = {
@@ -292,6 +392,12 @@ jvcApp.controller('ForumsPostsCtrl', [
     };
     page = 1;
     $scope.more = true;
+    navbar.setTitle('Veuillez patienter...');
+    navbar.setNavButton({
+      icon: 'arrow',
+      rotation: 'left',
+      link: 'forums.list'
+    });
     return $scope.loadMoreTopics = function() {
       if (!$scope.more) {
         return;
@@ -304,10 +410,12 @@ jvcApp.controller('ForumsPostsCtrl', [
           topic = _ref[_i];
           re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
           matched = re.exec(topic.lien_topic);
-          topic.url = "/forums/" + matched[1] + "/" + matched[2];
+          topic.fid = matched[1];
+          topic.id = matched[2];
         }
         $scope.posts = list;
         $scope.loading = false;
+        navbar.setTitle($scope.posts.liste_topics.nom_forum);
         if (!$scope.$$phase) {
           $scope.$digest();
         }
@@ -333,14 +441,14 @@ jvcApp.config([
     }).state('forums.topics', {
       abstract: true,
       templateUrl: 'partials/base.html'
-    }).state('forums.topics.list', {
-      url: '/forums/:id',
-      templateUrl: 'partials/forums/posts.html',
-      controller: 'ForumsPostsCtrl'
     }).state('forums.topics.view', {
       url: '/forums/:id/:topic',
       templateUrl: 'partials/forums/post.html',
       controller: 'ForumsPostCtrl'
+    }).state('forums.topics.list', {
+      url: '/forums/:id',
+      templateUrl: 'partials/forums/posts.html',
+      controller: 'ForumsPostsCtrl'
     });
     return $urlRouterProvider.otherwise('/');
   }
