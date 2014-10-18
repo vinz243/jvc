@@ -1,6 +1,7 @@
-<md-toolbar class="md-theme-light">
+<div ng-controller="ForumsPostsCtrl">
+ <md-toolbar class="md-theme-light">
   <h2 class="md-toolbar-tools">
-      <a ng-href="{{urls.back}}">
+      <a ui-sref="forums.list()">
        <i id="left-nav-icon" marka-icon="arrow #fff 25 left"></i>
       </a>
         <span>{{posts.liste_topics.nom_forum || 'Loading...'}}</span>
@@ -17,4 +18,6 @@
   <div layout="horizontal" layout-align="center">
     <md-progress-circular mode="indeterminate" ng-if="more"></md-progress-circular>
   </div>
+</div>
+
 </div>

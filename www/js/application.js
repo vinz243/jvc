@@ -1,8 +1,6 @@
-
-
 var config, jvcApp, markaCache;
 
-jvcApp = angular.module('jvc', ['ngRoute', 'ngMaterial', 'infinite-scroll']);
+jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll']);
 
 config = {
   domain: "http://" + (window.location.host.split(':')[0]) + ":8101"
@@ -33,42 +31,20 @@ markaCache = {};
 
 jvcApp.directive("markaIcon", function($location) {
   return function(scope, element, attrs) {
-    var $el, id;
+    var $el, id, marka;
     $el = $(element);
     id = $el.attr('id');
-    if (!markaCache[id]) {
-      markaCache[id] = new Marka('#' + id);
-    }
+    marka = new Marka('#' + id);
     return attrs.$observe("markaIcon", function(val) {
-      markaCache[id].set(val.split(' ')[0]);
-      markaCache[id].color(val.split(' ')[1]);
-      markaCache[id].size(val.split(' ')[2]);
+      marka.set(val.split(' ')[0]);
+      marka.color(val.split(' ')[1]);
+      marka.size(val.split(' ')[2]);
       if (val.split(' ')[3]) {
-        markaCache[id].rotate(val.split(' ')[3]);
+        marka.rotate(val.split(' ')[3]);
       }
     });
   };
 });
-
-jvcApp.config([
-  '$routeProvider', function($routeProvider) {
-    return $routeProvider.when('/', {
-      templateUrl: 'partials/index.html',
-      controller: 'IndexCtrl'
-    }).when('/forums', {
-      templateUrl: 'partials/forums/index.html',
-      controller: 'ForumsIndexCtrl'
-    }).when('/forums/:id/:topic', {
-      templateUrl: 'partials/forums/post.html',
-      controller: 'ForumsPostCtrl'
-    }).when('/forums/:id', {
-      templateUrl: 'partials/forums/posts.html',
-      controller: 'ForumsPostsCtrl'
-    }).otherwise({
-      redirectTo: '/'
-    });
-  }
-]);
 
 var defaultOptions, normalize, parseXML, xml2json, xml2jsonImpl;
 
@@ -193,6 +169,8 @@ jvcApp.controller('IndexCtrl', [
   }
 ]);
 
+
+
 jvcApp.controller('ForumsIndexCtrl', [
   '$scope', '$http', function($scope, $http) {
     $scope.loading = true;
@@ -237,19 +215,17 @@ jvcApp.controller('ForumsIndexCtrl', [
         }
         forums.push(_section);
       }
-      console.log(forums);
       $scope.forums = forums;
       $scope.loading = false;
       if (!$scope.$$phase) {
-        $scope.$digest();
+        return $scope.$digest();
       }
-      return console.log(list);
     });
   }
 ]);
 
 jvcApp.controller('ForumsPostCtrl', [
-  '$scope', '$http', '$routeParams', '$sce', function($scope, $http, $routeParams, $sce) {
+  '$scope', '$http', '$stateParams', '$sce', function($scope, $http, $routeParams, $sce) {
     var page, pending;
     $scope.loading = true;
     page = 1;
@@ -258,6 +234,7 @@ jvcApp.controller('ForumsPostCtrl', [
     $scope.urls = {
       back: '#/forums/' + $routeParams.id
     };
+    $scope.id = $routeParams.id;
     $scope.loadMorePosts = function() {
       if (!$scope.more || pending) {
         return;
@@ -307,7 +284,7 @@ jvcApp.controller('ForumsPostCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostsCtrl', [
-  '$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
+  '$scope', '$http', '$stateParams', function($scope, $http, $routeParams) {
     var page;
     $scope.loading = true;
     $scope.urls = {
@@ -339,3 +316,34 @@ jvcApp.controller('ForumsPostsCtrl', [
     };
   }
 ]);
+
+jvcApp.config([
+  '$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+    $stateProvider.state('index', {
+      url: '/',
+      templateUrl: 'partials/index.html',
+      controller: 'IndexCtrl'
+    }).state('forums', {
+      abstract: 'true',
+      templateUrl: 'partials/base.html'
+    }).state('forums.list', {
+      url: '/forums',
+      templateUrl: 'partials/forums/index.html',
+      controller: 'ForumsIndexCtrl'
+    }).state('forums.topics', {
+      abstract: true,
+      templateUrl: 'partials/base.html'
+    }).state('forums.topics.list', {
+      url: '/forums/:id',
+      templateUrl: 'partials/forums/posts.html',
+      controller: 'ForumsPostsCtrl'
+    }).state('forums.topics.view', {
+      url: '/forums/:id/:topic',
+      templateUrl: 'partials/forums/post.html',
+      controller: 'ForumsPostCtrl'
+    });
+    return $urlRouterProvider.otherwise('/');
+  }
+]);
+
+

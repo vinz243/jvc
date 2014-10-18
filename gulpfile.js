@@ -8,12 +8,17 @@ var rename = require('gulp-rename');
 var sh = require('shelljs');
 var coffee = require('gulp-coffee');
 
-var addsrc = require('gulp-add-src');
 
 
 var paths = {
   sass: ['./www/**/*.scss'],
-  coffee: ['./www/coffee/**/*.coffee'],
+  coffee: [
+    './www/coffee/app.coffee',
+    './www/coffee/xml2json.coffee',
+    './www/coffee/controllers/**/*.coffee',
+    './www/coffee/router.coffee',
+    './www/coffee/**/*.coffee'
+  ],
   css: [
 //     './www/lib/semantic-ui/build/packaged/definitions/css/semantic.min.css'
      './www/lib/angular-material/angular-material.min.css',
@@ -22,7 +27,7 @@ var paths = {
   js: [
     './www/lib/jquery/dist/jquery.min.js',
     './www/lib/angular/angular.js',
-    './www/lib/angular-route/angular-route.min.js',
+    './www/lib/angular-ui-router/release/angular-ui-router.min.js',
     './www/lib/angular-aria/angular-aria.js',
     './www/lib/angular-animate/angular-animate.js',
     './www/lib/hammerjs/hammer.js',
@@ -62,8 +67,11 @@ gulp.task('coffee', function(done) {
   gulp.src(paths.coffee)
     .pipe(coffee({
       bare: true
-    }).on('error', gutil.log))
-    .pipe(concat('application.js'))
+    }).on('error', gutil.log)
+    .on('error', gutil.beep)
+    .on('error', function (error) {
+      this.emit('end');
+    })).pipe(concat('application.js'))
     .pipe(gulp.dest('./www/js'))
     .on('end', done)
 })

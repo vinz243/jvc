@@ -1,10 +1,11 @@
-jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$routeParams', '$sce', ($scope, $http, $routeParams, $sce) ->
+jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$stateParams', '$sce', ($scope, $http, $routeParams, $sce) ->
   $scope.loading = true
   page = 1
   pending = false
   $scope.more = true
   $scope.urls = 
     back: '#/forums/' + $routeParams.id
+  $scope.id = $routeParams.id
   
   $scope.loadMorePosts = -> 
     
@@ -33,7 +34,7 @@ jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$routeParams', '$sce', 
         obj.title = $sce.trustAsHtml(obj.author + ' - ' + obj.ts)
         posts.push obj
   
-      $scope.posts = posts
+      $scope.posts = posts  
       $scope.title = res.detail_topic.sujet_topic
       if not $scope.$$phase then $scope.digest()
       page = page + 1

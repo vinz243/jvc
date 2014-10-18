@@ -23,9 +23,7 @@ jvcApp.controller 'ForumsIndexCtrl', ['$scope', '$http', ($scope, $http) ->
       for sub in sublist
         _section.subsections.push sub
       forums.push _section
-    console.log forums
     $scope.forums = forums
     $scope.loading = false
     if not $scope.$$phase then $scope.$digest()
-    console.log list
 ]

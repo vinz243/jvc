@@ -1,5 +1,5 @@
 
-jvcApp = angular.module('jvc', ['ngRoute', 'ngMaterial', 'infinite-scroll'])
+jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll'])
 config =
   domain: "http://#{window.location.host.split(':')[0]}:8101"
 
@@ -28,14 +28,13 @@ jvcApp.directive "markaIcon", ($location) ->
   (scope, element, attrs) ->
     $el = $ element
     id = $el.attr 'id'
-    if not markaCache[id]
-      markaCache[id] = new Marka('#' + id)
+    marka = new Marka('#' + id)
     
     attrs.$observe "markaIcon", (val) ->
-      markaCache[id].set val.split(' ')[0]
-      markaCache[id].color val.split(' ')[1]
-      markaCache[id].size val.split(' ')[2]
-      markaCache[id].rotate val.split(' ')[3] if val.split(' ')[3]
+      marka.set val.split(' ')[0]
+      marka.color val.split(' ')[1]
+      marka.size val.split(' ')[2]
+      marka.rotate val.split(' ')[3] if val.split(' ')[3]
       return
 
 

@@ -1,4 +1,4 @@
-jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$routeParams', ($scope, $http, $routeParams) ->
+jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', ($scope, $http, $routeParams) ->
   $scope.loading = true
   $scope.urls =
     back: '#/forums'
