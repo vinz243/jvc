@@ -4,10 +4,12 @@ jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar
     back: '#/forums'
   page = 1
   $scope.more = true
+  busy = false
   navbar.setTitle 'Veuillez patienter...'
   navbar.setNavButton icon: 'arrow', rotation: 'left', link: 'forums.list'
   $scope.loadMoreTopics = ->
-    if not $scope.more then return
+    if not $scope.more or busy then return
+    busy = true
     $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-' + page + '-0-0.xml').success (data) ->
       list = xml2json(data)
       # process urls:
@@ -22,4 +24,5 @@ jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar
       navbar.setTitle $scope.posts.liste_topics.nom_forum
       if not $scope.$$phase then $scope.$digest()
       page += 25
+      busy = false
 ]

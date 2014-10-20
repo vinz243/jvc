@@ -13,6 +13,23 @@ a {
   text-decoration: none;
   color: Black; }
 
+i.toolbar-icon {
+  font-size: 30px; }
+
+.bottom-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%; }
+
+.light md-input-group input {
+  color: #fff !important;
+  border-color: #fff !important;
+  width: 100%; }
+.light md-input-group label {
+  color: #fff !important; }
+.light md-input-group + i {
+  font-size: 25px; }
 
 /*! Generated at Fri Oct 17 2014 14:02:24 GMT+0200 (Paris, Madrid (heure d’été)). Included icons: arrow, bars, angle, plus */
 /*! 

@@ -17,6 +17,8 @@
     "shelljs": "^0.3.0",
     "colors": "~1.0.3",
     "http-proxy": "~1.5.3",
-    "connect": "~2.11.2"
+    "connect": "~2.11.2",
+    "gulp-iconfont": "~0.2.1",
+    "gulp-iconfont-css": "0.0.9"
   }
 }

@@ -8,6 +8,7 @@
     <!-- <link href="lib/ionic/css/ionic.css" rel="stylesheet"> -->
     <link href="css/style.css" rel="stylesheet">
     <link href="css/vendors.css" rel="stylesheet">
+    <link href="css/icon-font.css" rel="stylesheet">
 
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
     <link href="css/ionic.app.css" rel="stylesheet">
@@ -30,6 +31,10 @@
           <h2 class="md-toolbar-tools">
             <a go-click="{{leftLink}}"> <i id="left-nav-icon"></i></a>
             <span ng-cloack="Loading">{{title}}</span>
+
+            <span flex></span>
+            <a ng-click="call(button.uid)" ng-repeat="button in buttons"> <i class="toolbar-icon mdi-{{button.icon}}"></i></a>
+
           </h2>
         </md-toolbar>
     </div>

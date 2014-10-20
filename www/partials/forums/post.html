@@ -1,19 +1,20 @@
-
- <div infinite-scroll="loadMorePosts()" infinite-scroll-distance="0">
-  <md-content>
-
+<md-content class="md-content-padding">
+  <div infinite-scroll="loadMorePosts()" infinite-scroll-distance="0">
     <md-card ng-repeat="post in posts">
-      <h5 ng-bind-html="post.title"></h5>
+      <h5 ng-bind-html="post.title">
+      </h5>
       <p ng-bind-html="post.body">
       </p>
     </md-card>
-  <div layout="horizontal" layout-align="center">
-
-    
-    <md-progress-circular mode="indeterminate" ng-if="more"></md-progress-circular>
-
+    <div layout="horizontal" layout-align="center">
+      <md-progress-circular mode="indeterminate" ng-if="more">
+      </md-progress-circular>
+    </div>
   </div>
-
-  </md-content>
-  
-</div>
+</md-content>
+<md-toolbar class="bottom-toolbar md-theme-light">
+      <div class="md-toolbar-tools light"  layout="horizontal">
+        <md-text-float label="Ajouter un message" ng-model="newMessageBody"></md-text-float>
+        <i class="mdi-content-send" ng-click="sendMessage($event)"></i>
+      </div>
+</md-toolbar>

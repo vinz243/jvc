@@ -7,6 +7,8 @@ var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
 var coffee = require('gulp-coffee');
+var iconfont = require('gulp-iconfont');
+var iconfontCss = require('gulp-iconfont-css');
 
 
 
@@ -35,8 +37,18 @@ var paths = {
     './www/lib/ngInfiniteScroll/build/ng-infinite-scroll.min.js',
     "./www/lib/marka/dist/js/marka.js",
 //    './www/lib/angular-bindonce/bindonce.js',
+  ],
+  svg: [
+    './www/lib/material-design-icons/**/*_48px.svg'
   ]
 };
+//var svgSprite = require("gulp-svg-sprites");
+
+gulp.task('sprites', function () {
+    return gulp.src(paths.svg)
+        .pipe(svgSprite())
+        .pipe(gulp.dest("assets"));
+});
 gulp.task('default', ['sass']);
 gulp.task('sass', function(done) {
   gulp.src('./www/sass/**.scss')
@@ -78,4 +90,20 @@ gulp.task('coffee', function(done) {
 gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass'])
   gulp.watch(paths.coffee, ['coffee'])
+});
+gulp.task('iconfont', function(done){
+  gulp.src(paths.svg)
+    .pipe(iconfontCss({
+      fontName: 'material-design', // required
+      path: './www/sass/templates/_icons.scss',
+      targetPath: '../sass/_icons.scss',
+      fontPath: '/fonts/',
+      fixedWidth: true,
+      normalize: true,
+      log: console.log
+    })).pipe(iconfont({
+      fontName: 'material-design', // required
+    }))
+    .pipe(gulp.dest('./www/fonts/'))
+    .on('end', done);
 });

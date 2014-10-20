@@ -1,3 +1,4 @@
+
 #content {
   width: 100%;
   height: 100%;
@@ -20,4 +21,29 @@ a {
 
 div, span, h4, h5, body, p {
 //  overflow-x: hidden;
+}
+i.toolbar-icon {
+  font-size: 30px;
+}
+
+.bottom-toolbar {
+    position: fixed;
+    // z-index: 100;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.light md-input-group {
+  input {
+    color: #fff !important;
+    border-color: #fff !important;
+    width: 100%;
+  }
+  label {
+    color: #fff !important;
+  }
+  &+ i {
+    font-size: 25px;
+  }
 }

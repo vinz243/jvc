@@ -3,7 +3,8 @@ var config, jvcApp;
 jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll']);
 
 config = {
-  domain: "http://" + (window.location.host.split(':')[0]) + ":8101"
+  domain: "http://" + (window.location.host.split(':')[0]) + ":8101",
+  host: "" + (window.location.host.split(':')[0]) + ":8101"
 };
 
 jvcApp.config([
@@ -19,49 +20,55 @@ jvcApp.config([
     buttons: []
   };
   listeners = {};
-  jvcApp.factory("navbar", function() {
-    return {
-      setTitle: function(newTitle) {
-        var call, _i, _len, _ref, _results;
-        navbar.title = newTitle;
-        _ref = listeners.onTitle;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          call = _ref[_i];
-          _results.push(call(newTitle));
+  jvcApp.factory("navbar", [
+    '$rootScope', function($rootScope) {
+      navbar = {
+        title: "...",
+        buttons: []
+      };
+      return {
+        setTitle: function(newTitle) {
+          var call, _i, _len, _ref, _results;
+          navbar.title = newTitle;
+          _ref = listeners.onTitle;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            call = _ref[_i];
+            _results.push(call(newTitle));
+          }
+          return _results;
+        },
+        addButton: function(opts) {
+          var call, _i, _len, _ref, _results;
+          navbar.buttons.push(opts);
+          _ref = listeners.onButton;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            call = _ref[_i];
+            _results.push(call(opts));
+          }
+          return _results;
+        },
+        setNavButton: function(opts) {
+          var call, _i, _len, _ref, _results;
+          navbar.navButton = opts;
+          _ref = listeners.onNavButton;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            call = _ref[_i];
+            _results.push(call(opts));
+          }
+          return _results;
+        },
+        addHook: function(domain, func) {
+          if (!listeners[domain]) {
+            listeners[domain] = [];
+          }
+          return listeners[domain].push(func);
         }
-        return _results;
-      },
-      addButton: function(opts) {
-        var call, _i, _len, _ref, _results;
-        navbar.buttons.push(opts);
-        _ref = listeners.onButton;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          call = _ref[_i];
-          _results.push(call(title));
-        }
-        return _results;
-      },
-      setNavButton: function(opts) {
-        var call, _i, _len, _ref, _results;
-        navbar.navButton = opts;
-        _ref = listeners.onNavButton;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          call = _ref[_i];
-          _results.push(call(opts));
-        }
-        return _results;
-      },
-      addHook: function(domain, func) {
-        if (!listeners[domain]) {
-          listeners[domain] = [];
-        }
-        return listeners[domain].push(func);
-      }
-    };
-  });
+      };
+    }
+  ]);
   jvcApp.directive("goClick", [
     '$location', '$state', function($location, $state) {
       return function(scope, element, attrs) {
@@ -107,6 +114,25 @@ jvcApp.config([
     };
   });
 })();
+
+jvcApp.factory("$localstorage", [
+  "$window", function($window) {
+    return {
+      set: function(key, value) {
+        $window.localStorage[key] = value;
+      },
+      get: function(key, defaultValue) {
+        return $window.localStorage[key] || defaultValue;
+      },
+      setObject: function(key, value) {
+        $window.localStorage[key] = JSON.stringify(value);
+      },
+      getObject: function(key) {
+        return JSON.parse($window.localStorage[key] || "{}");
+      }
+    };
+  }
+]);
 
 var defaultOptions, normalize, parseXML, xml2json, xml2jsonImpl;
 
@@ -236,13 +262,22 @@ jvcApp.controller('IndexCtrl', [
 
 (function() {
   return jvcApp.controller("NavBarCtrl", [
-    'navbar', '$scope', function(navbar, $scope) {
-      var icon;
+    'navbar', '$scope', '$rootScope', function(navbar, $scope, $rootScope) {
+      var buttonCallback, icon;
       icon = new Marka($('#left-nav-icon')[0]);
+      $scope.buttons = [];
+      buttonCallback = {};
+      $rootScope.$on('$stateChangeSuccess', function() {
+        return $scope.buttons = [];
+      });
+      $scope.call = function(uid) {
+        console.log(uid, buttonCallback);
+        return buttonCallback[uid]();
+      };
       navbar.addHook("onTitle", function(newTitle) {
         return $scope.title = newTitle;
       });
-      return navbar.addHook('onNavButton', function(opts) {
+      navbar.addHook('onNavButton', function(opts) {
         icon.set(opts.icon);
         icon.color(opts.color || "#fff");
         icon.size(opts.size || 30);
@@ -251,6 +286,15 @@ jvcApp.controller('IndexCtrl', [
         if (!$scope.$$phase) {
           return $scope.$digest();
         }
+      });
+      return navbar.addHook('onButton', function(opts) {
+        var uid;
+        uid = Math.floor(Math.random() * 1e26).toString(36);
+        $scope.buttons.push({
+          icon: opts.icon,
+          uid: uid
+        });
+        buttonCallback[uid] = opts.callback;
       });
     }
   ]);
@@ -319,11 +363,10 @@ jvcApp.controller('ForumsIndexCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostCtrl', [
-  '$scope', '$http', '$stateParams', '$sce', 'navbar', function($scope, $http, $routeParams, $sce, navbar) {
-    var page, pending;
+  '$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', function($scope, $http, $routeParams, $sce, navbar, $auth, $q) {
+    var isBusy, page;
     $scope.loading = true;
     page = 1;
-    pending = false;
     $scope.more = true;
     $scope.urls = {
       back: '#/forums/' + $routeParams.id
@@ -335,11 +378,52 @@ jvcApp.controller('ForumsPostCtrl', [
       rotation: 'left',
       link: 'forums.topics.list({id: "' + $routeParams.id + '"})'
     });
+    navbar.addButton({
+      icon: 'communication-textsms',
+      callback: function() {}
+    });
+    $scope.sendMessage = function($event) {
+      var params;
+      params = {};
+      return $auth.getSID($event).then(function(sid) {
+        console.log('sid is', sid);
+        return $http({
+          method: "GET",
+          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-" + $routeParams.topic + "-1-0-1-0-0.xml",
+          withCredentials: true
+        });
+      }).then(function() {
+        return $http({
+          method: "GET",
+          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-" + $routeParams.topic + "-1-0-1-0-0.xml",
+          withCredentials: true
+        });
+      }).then(function(res) {
+        var data, deferred;
+        deferred = $q.defer();
+        data = xml2json(res.data);
+        params = data.new_message.params_form;
+        console.log(params);
+        setTimeout(deferred.resolve, 1250);
+        return deferred.promise;
+      }).then(function() {
+        return $http({
+          method: "POST",
+          url: config.domain + '/cgi-bin/jvforums/forums.cgi',
+          data: params + '&yournewmessage=' + $scope.newMessageBody,
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        });
+      }).then(console.log);
+    };
+    isBusy = false;
     $scope.loadMorePosts = function() {
-      if (!$scope.more || pending) {
+      if (!$scope.more || isBusy) {
         return;
       }
-      pending = true;
+      isBusy = true;
       return $http.get(config.domain + '/forums/1-' + $routeParams.id + '-' + $routeParams.topic + '-' + page + '-0-1-0-0.xml').success(function(data) {
         var $content, posts, res;
         if (!data || data === "") {
@@ -371,7 +455,7 @@ jvcApp.controller('ForumsPostCtrl', [
           $scope.digest();
         }
         page = page + 1;
-        return pending = false;
+        return isBusy = false;
       }).error(function(data) {
         $scope.more = false;
         if (!$scope.$$phase) {
@@ -385,13 +469,14 @@ jvcApp.controller('ForumsPostCtrl', [
 
 jvcApp.controller('ForumsPostsCtrl', [
   '$scope', '$http', '$stateParams', 'navbar', function($scope, $http, $routeParams, navbar) {
-    var page;
+    var busy, page;
     $scope.loading = true;
     $scope.urls = {
       back: '#/forums'
     };
     page = 1;
     $scope.more = true;
+    busy = false;
     navbar.setTitle('Veuillez patienter...');
     navbar.setNavButton({
       icon: 'arrow',
@@ -399,9 +484,10 @@ jvcApp.controller('ForumsPostsCtrl', [
       link: 'forums.list'
     });
     return $scope.loadMoreTopics = function() {
-      if (!$scope.more) {
+      if (!$scope.more || busy) {
         return;
       }
+      busy = true;
       return $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-' + page + '-0-0.xml').success(function(data) {
         var list, matched, re, topic, _i, _len, _ref;
         list = xml2json(data);
@@ -419,7 +505,8 @@ jvcApp.controller('ForumsPostsCtrl', [
         if (!$scope.$$phase) {
           $scope.$digest();
         }
-        return page += 25;
+        page += 25;
+        return busy = false;
       });
     };
   }
@@ -454,4 +541,251 @@ jvcApp.config([
   }
 ]);
 
+(function() {
+  var isConnected, sid, user;
+  isConnected = false;
+  user = void 0;
+  sid = "";
+  jvcApp.controller('LoginDialogCtrl', [
+    '$scope', '$mdDialog', function($scope, $mdDialog) {
+      $scope.connecting = false;
+      $scope.cancel = function() {
+        return $mdDialog.hide();
+      };
+      return $scope.connect = function() {
+        return $mdDialog.hide({
+          username: $scope.username,
+          password: $scope.password
+        });
+      };
+    }
+  ]);
+  return jvcApp.factory('$auth', [
+    '$http', '$q', '$mdDialog', '$md5', function($http, $q, $mdDialog, $md5) {
+      return {
+        getSID: function($event) {
+          var deferred;
+          deferred = $q.defer();
+          if (!isConnected) {
+            $mdDialog.show({
+              controller: 'LoginDialogCtrl',
+              event: $event,
+              clickOutsideToClose: false,
+              template: "<md-dialog>\n   <div class=\"dialog-content\">\n     <div >\n        Veuillez vous connecter :\n        <form>\n          <md-text-float label=\"Nom d'utilisateur\" ng-model=\"username\"> </md-text-float>\n          <md-text-float type=\"password\" label=\"Mot de passe\" ng-model=\"password\"> </md-text-float>\n       </form>\n     </div>\n   </div>\n   <div class=\"dialog-actions\">\n    <md-button ng-click=\"cancel()\">\n      Annuler\n    </md-button>\n    <md-button ng-click=\"connect()\" class=\"md-theme-green\">\n      Se connecter\n    </md-button>\n  </div>\n</md-dialog>"
+            }).then(function(credentials) {
+              var hash, stamp, username;
+              if (!credentials) {
+                return deferred.reject(new Error('EOPERATION_CANCELED'));
+              }
+              stamp = Date.now();
+              username = credentials.username;
+              hash = $md5(username + credentials.password + "OpX234" + stamp);
+              return $http({
+                method: "POST",
+                url: config.domain + '/mon_compte/connexion.php',
+                data: $.param({
+                  newnom: username,
+                  stamp: stamp,
+                  hash: hash
+                }),
+                withCredentials: true,
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded"
+                }
+              });
+            }).then(function(response) {
+              var $data, cookieData;
+              $data = $($.parseXML(response.data));
+              cookieData = $data.find('cookie').html();
+              sid = /<!\[CDATA\[wenvjgol=(.+)\]\]>/gi.exec(cookieData)[1];
+              return deferred.resolve(sid);
+            });
+          }
+          return deferred.promise;
+        }
+      };
+    }
+  ]);
+})();
 
+
+/*
+Originally made by Joseph Myers (http://www.myersdaily.org/joseph/javascript/md5-text.html)
+Extended to ASCII and UTF16 characters by wbond (https://github.com/wbond/md5-js)
+ */
+jvcApp.service("$md5", [
+  function() {
+    var add32, cmn, ff, gg, hex, hex_chr, hh, ii, md5, md51, md5blk, md5cycle, rhex;
+    md5cycle = function(x, k) {
+      var a, b, c, d;
+      a = x[0];
+      b = x[1];
+      c = x[2];
+      d = x[3];
+      a = ff(a, b, c, d, k[0], 7, -680876936);
+      d = ff(d, a, b, c, k[1], 12, -389564586);
+      c = ff(c, d, a, b, k[2], 17, 606105819);
+      b = ff(b, c, d, a, k[3], 22, -1044525330);
+      a = ff(a, b, c, d, k[4], 7, -176418897);
+      d = ff(d, a, b, c, k[5], 12, 1200080426);
+      c = ff(c, d, a, b, k[6], 17, -1473231341);
+      b = ff(b, c, d, a, k[7], 22, -45705983);
+      a = ff(a, b, c, d, k[8], 7, 1770035416);
+      d = ff(d, a, b, c, k[9], 12, -1958414417);
+      c = ff(c, d, a, b, k[10], 17, -42063);
+      b = ff(b, c, d, a, k[11], 22, -1990404162);
+      a = ff(a, b, c, d, k[12], 7, 1804603682);
+      d = ff(d, a, b, c, k[13], 12, -40341101);
+      c = ff(c, d, a, b, k[14], 17, -1502002290);
+      b = ff(b, c, d, a, k[15], 22, 1236535329);
+      a = gg(a, b, c, d, k[1], 5, -165796510);
+      d = gg(d, a, b, c, k[6], 9, -1069501632);
+      c = gg(c, d, a, b, k[11], 14, 643717713);
+      b = gg(b, c, d, a, k[0], 20, -373897302);
+      a = gg(a, b, c, d, k[5], 5, -701558691);
+      d = gg(d, a, b, c, k[10], 9, 38016083);
+      c = gg(c, d, a, b, k[15], 14, -660478335);
+      b = gg(b, c, d, a, k[4], 20, -405537848);
+      a = gg(a, b, c, d, k[9], 5, 568446438);
+      d = gg(d, a, b, c, k[14], 9, -1019803690);
+      c = gg(c, d, a, b, k[3], 14, -187363961);
+      b = gg(b, c, d, a, k[8], 20, 1163531501);
+      a = gg(a, b, c, d, k[13], 5, -1444681467);
+      d = gg(d, a, b, c, k[2], 9, -51403784);
+      c = gg(c, d, a, b, k[7], 14, 1735328473);
+      b = gg(b, c, d, a, k[12], 20, -1926607734);
+      a = hh(a, b, c, d, k[5], 4, -378558);
+      d = hh(d, a, b, c, k[8], 11, -2022574463);
+      c = hh(c, d, a, b, k[11], 16, 1839030562);
+      b = hh(b, c, d, a, k[14], 23, -35309556);
+      a = hh(a, b, c, d, k[1], 4, -1530992060);
+      d = hh(d, a, b, c, k[4], 11, 1272893353);
+      c = hh(c, d, a, b, k[7], 16, -155497632);
+      b = hh(b, c, d, a, k[10], 23, -1094730640);
+      a = hh(a, b, c, d, k[13], 4, 681279174);
+      d = hh(d, a, b, c, k[0], 11, -358537222);
+      c = hh(c, d, a, b, k[3], 16, -722521979);
+      b = hh(b, c, d, a, k[6], 23, 76029189);
+      a = hh(a, b, c, d, k[9], 4, -640364487);
+      d = hh(d, a, b, c, k[12], 11, -421815835);
+      c = hh(c, d, a, b, k[15], 16, 530742520);
+      b = hh(b, c, d, a, k[2], 23, -995338651);
+      a = ii(a, b, c, d, k[0], 6, -198630844);
+      d = ii(d, a, b, c, k[7], 10, 1126891415);
+      c = ii(c, d, a, b, k[14], 15, -1416354905);
+      b = ii(b, c, d, a, k[5], 21, -57434055);
+      a = ii(a, b, c, d, k[12], 6, 1700485571);
+      d = ii(d, a, b, c, k[3], 10, -1894986606);
+      c = ii(c, d, a, b, k[10], 15, -1051523);
+      b = ii(b, c, d, a, k[1], 21, -2054922799);
+      a = ii(a, b, c, d, k[8], 6, 1873313359);
+      d = ii(d, a, b, c, k[15], 10, -30611744);
+      c = ii(c, d, a, b, k[6], 15, -1560198380);
+      b = ii(b, c, d, a, k[13], 21, 1309151649);
+      a = ii(a, b, c, d, k[4], 6, -145523070);
+      d = ii(d, a, b, c, k[11], 10, -1120210379);
+      c = ii(c, d, a, b, k[2], 15, 718787259);
+      b = ii(b, c, d, a, k[9], 21, -343485551);
+      x[0] = add32(a, x[0]);
+      x[1] = add32(b, x[1]);
+      x[2] = add32(c, x[2]);
+      x[3] = add32(d, x[3]);
+    };
+    cmn = function(q, a, b, x, s, t) {
+      a = add32(add32(a, q), add32(x, t));
+      return add32((a << s) | (a >>> (32 - s)), b);
+    };
+    ff = function(a, b, c, d, x, s, t) {
+      return cmn((b & c) | ((~b) & d), a, b, x, s, t);
+    };
+    gg = function(a, b, c, d, x, s, t) {
+      return cmn((b & d) | (c & (~d)), a, b, x, s, t);
+    };
+    hh = function(a, b, c, d, x, s, t) {
+      return cmn(b ^ c ^ d, a, b, x, s, t);
+    };
+    ii = function(a, b, c, d, x, s, t) {
+      return cmn(c ^ (b | (~d)), a, b, x, s, t);
+    };
+    md51 = function(s) {
+      var i, n, state, tail, txt;
+      if (/[\x80-\xFF]/.test(s)) {
+        s = unescape(encodeURI(s));
+      }
+      txt = "";
+      n = s.length;
+      state = [1732584193, -271733879, -1732584194, 271733878];
+      i = void 0;
+      i = 64;
+      while (i <= s.length) {
+        md5cycle(state, md5blk(s.substring(i - 64, i)));
+        i += 64;
+      }
+      s = s.substring(i - 64);
+      tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      i = 0;
+      while (i < s.length) {
+        tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+        i++;
+      }
+      tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+      if (i > 55) {
+        md5cycle(state, tail);
+        i = 0;
+        while (i < 16) {
+          tail[i] = 0;
+          i++;
+        }
+      }
+      tail[14] = n * 8;
+      md5cycle(state, tail);
+      return state;
+    };
+    md5blk = function(s) {
+      var i, md5blks;
+      md5blks = [];
+      i = void 0;
+      i = 0;
+      while (i < 64) {
+        md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+        i += 4;
+      }
+      return md5blks;
+    };
+    rhex = function(n) {
+      var j, s;
+      s = "";
+      j = 0;
+      while (j < 4) {
+        s += hex_chr[(n >> (j * 8 + 4)) & 0x0f] + hex_chr[(n >> (j * 8)) & 0x0f];
+        j++;
+      }
+      return s;
+    };
+    hex = function(x) {
+      var i;
+      i = 0;
+      while (i < x.length) {
+        x[i] = rhex(x[i]);
+        i++;
+      }
+      return x.join("");
+    };
+    add32 = function(a, b) {
+      return (a + b) & 0xffffffff;
+    };
+    hex_chr = "0123456789abcdef".split("");
+    md5 = function(s) {
+      return hex(md51(s));
+    };
+    if (md5("hello") !== "5d41402abc4b2a76b9719d911017c592") {
+      add32 = function(x, y) {
+        var lsw, msw;
+        lsw = (x & 0xffff) + (y & 0xffff);
+        msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+        return (msw << 16) | (lsw & 0xffff);
+      };
+    }
+    return md5;
+  }
+]);
