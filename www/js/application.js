@@ -13,6 +13,14 @@ jvcApp.config([
   }
 ]);
 
+jvcApp.run([
+  '$rootScope', function($rootScope) {
+    $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
+      return $rootScope.containerClass = toState.containerClass;
+    });
+  }
+]);
+
 (function() {
   var listeners, markaCache, navbar;
   navbar = {
@@ -251,6 +259,19 @@ defaultOptions = {
 
 window.xml2json = xml2json;
 
+jvcApp.controller('CaptchaDialogCtrl', [
+  '$scope', '$mdDialog', function($scope, $mdDialog) {
+    $scope.cancel = function() {
+      return $mdDialog.hide();
+    };
+    return $scope.validate = function() {
+      return $mdDialog.hide({
+        code: $scope.code
+      });
+    };
+  }
+]);
+
 jvcApp.controller('IndexCtrl', [
   '$scope', 'navbar', function($scope, navbar) {
     navbar.setTitle('Appli JVC non officielle');
@@ -299,6 +320,92 @@ jvcApp.controller('IndexCtrl', [
     }
   ]);
 })();
+
+jvcApp.controller('ForumsAddPostsCtrl', [
+  '$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', '$mdDialog', '$mdToast', '$state', function($scope, $http, $routeParams, $sce, navbar, $auth, $q, $mdDialog, $mdToast, $state) {
+    navbar.setTitle('Créer un nouveau sujet');
+    navbar.setNavButton({
+      icon: 'times',
+      link: 'forums.topics.list({id: "' + $routeParams.id + '"})'
+    });
+    return $scope.createTopic = function($event) {
+      var params;
+      params = {};
+      return $auth.getSID($event).then(function(sid) {
+        console.log('sid is', sid);
+        return $http({
+          method: "GET",
+          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-0-1-0-1-0-0.xml",
+          withCredentials: true
+        });
+      }).then(function() {
+        return $http({
+          method: "GET",
+          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-0-1-0-1-0-0.xml",
+          withCredentials: true
+        });
+      }).then(function(res) {
+        var data, deferred;
+        deferred = $q.defer();
+        data = xml2json(res.data);
+        params = data.new_topic.params_form;
+        console.log(params);
+        setTimeout(deferred.resolve, 1250);
+        return deferred.promise;
+      }).then(function() {
+        return $http({
+          method: "POST",
+          url: config.domain + '/cgi-bin/jvforums/forums.cgi',
+          data: params + '&' + $.param({
+            yournewmessage: $scope.content,
+            newsujet: $scope.subject
+          }),
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        });
+      }).then(function(res) {
+        var data, deferred, _ref, _ref1, _ref2;
+        data = xml2json(res.data);
+        deferred = $q.defer();
+        if ((_ref = data.new_topic) != null ? (_ref1 = _ref.erreur) != null ? _ref1.captcha : void 0 : void 0) {
+          params = data.new_topic.params_form;
+          return $mdDialog.show({
+            controller: 'CaptchaDialogCtrl',
+            event: $event,
+            clickOutsideToClose: false,
+            template: "<md-dialog>\n   <div class=\"dialog-content\">\n     <div >\n        Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <img src=\"" + data.new_topic.erreur.captcha + "\" />\n        </div>\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <md-text-float label=\"Votre r&eacute;ponse\" ng-model=\"code\"> </md-text-float>\n        </div>\n     </div>\n   </div>\n   <div class=\"dialog-actions\">\n    <md-button ng-click=\"cancel()\">\n      Annuler\n    </md-button>\n    <md-button ng-click=\"validate()\" class=\"md-theme-green\">\n      Valider\n    </md-button>\n  </div>\n</md-dialog>"
+          }).then(function(r) {
+            console.log('res', params + r.code);
+            return $http({
+              method: "POST",
+              url: config.domain + '/cgi-bin/jvforums/forums.cgi',
+              data: params + r.code,
+              withCredentials: true,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+              }
+            });
+          });
+        } else if ((_ref2 = data.new_topic) != null ? _ref2.erreur : void 0) {
+          deferred.reject(data.new_topic.erreur.texte_erreur);
+        }
+        deferred.resolve(res);
+        return deferred.promise;
+      }).then(function(res) {
+        return $state.go('forums.topics.list', {
+          id: $routeParams.id
+        });
+      })["catch"](function(err) {
+        return $mdToast.show({
+          template: "<md-toast>" + err.message + "</md-toast>",
+          hideDelay: 3000
+        });
+      });
+    };
+  }
+]);
 
 jvcApp.controller('ForumsIndexCtrl', [
   '$scope', '$http', 'navbar', function($scope, $http, navbar) {
@@ -468,7 +575,7 @@ jvcApp.controller('ForumsPostCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostsCtrl', [
-  '$scope', '$http', '$stateParams', 'navbar', function($scope, $http, $routeParams, navbar) {
+  '$scope', '$http', '$stateParams', 'navbar', '$state', function($scope, $http, $routeParams, navbar, $state) {
     var busy, page;
     $scope.loading = true;
     $scope.urls = {
@@ -476,6 +583,15 @@ jvcApp.controller('ForumsPostsCtrl', [
     };
     page = 1;
     $scope.more = true;
+    $scope.postMode = false;
+    $scope.addTopic = function() {
+      $scope.postMode = true;
+      setTimeout(function() {
+        return $state.go('forums.topics.add', {
+          id: $routeParams.id
+        });
+      }, 500);
+    };
     busy = false;
     navbar.setTitle('Veuillez patienter...');
     navbar.setNavButton({
@@ -529,13 +645,18 @@ jvcApp.config([
       abstract: true,
       templateUrl: 'partials/base.html'
     }).state('forums.topics.view', {
-      url: '/forums/:id/:topic',
+      url: '/forums/:id/view/:topic',
       templateUrl: 'partials/forums/post.html',
       controller: 'ForumsPostCtrl'
     }).state('forums.topics.list', {
       url: '/forums/:id',
       templateUrl: 'partials/forums/posts.html',
       controller: 'ForumsPostsCtrl'
+    }).state('forums.topics.add', {
+      url: '/forums/:id/new',
+      templateUrl: 'partials/forums/add.html',
+      controller: 'ForumsAddPostsCtrl',
+      containerClass: 'new-topic-route'
     });
     return $urlRouterProvider.otherwise('/');
   }

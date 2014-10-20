@@ -1,9 +1,16 @@
-jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar', ($scope, $http, $routeParams, navbar) ->
+jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar', '$state', ($scope, $http, $routeParams, navbar, $state) ->
   $scope.loading = true
   $scope.urls =
     back: '#/forums'
   page = 1
   $scope.more = true
+  $scope.postMode = false
+  $scope.addTopic = ->
+    $scope.postMode = true
+    setTimeout ->
+      $state.go 'forums.topics.add', id: $routeParams.id
+    , 500
+    return
   busy = false
   navbar.setTitle 'Veuillez patienter...'
   navbar.setNavButton icon: 'arrow', rotation: 'left', link: 'forums.list'
@@ -18,7 +25,7 @@ jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar
         matched = re.exec topic.lien_topic
         topic.fid = matched[1]
         topic.id = matched[2]
-      
+
       $scope.posts = list
       $scope.loading = false
       navbar.setTitle $scope.posts.liste_topics.nom_forum

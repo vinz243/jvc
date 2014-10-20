@@ -1,12 +1,12 @@
-/*! Generated at Fri Oct 17 2014 14:02:24 GMT+0200 (Paris, Madrid (heure d’été)). Included icons: arrow, bars, angle, plus */
-/*! 
- * Marka - v0.3.1 
- * http://fian.my.id/marka 
- * 
- * Copyright 2014 Alfiana E. Sibuea and other contributors 
- * Released under the MIT license 
- * https://github.com/fians/marka/blob/master/LICENSE 
- */ 
+/*! Generated at Mon Oct 20 2014 16:06:03 GMT+0200 (Paris, Madrid (heure d’été)). Included icons: times, plus, minus, check, bars, arrow, angle */
+/*!
+ * Marka - v0.3.1
+ * http://fian.my.id/marka
+ *
+ * Copyright 2014 Alfiana E. Sibuea and other contributors
+ * Released under the MIT license
+ * https://github.com/fians/marka/blob/master/LICENSE
+ */
 /* Core style */
 .marka {
   position: relative;
@@ -61,27 +61,61 @@
   transform: scale(0);
 }
 
-/* Arrow icon */
-.marka.marka-icon-arrow i {
-  -webkit-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
-  -moz-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
-  -ms-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
-  -o-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
-  transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
+/* Times icon */
+.marka.marka-icon-times i {
+  -webkit-transform: rotate(45deg) scale(0.8, 0.2);
+  -moz-transform: rotate(45deg) scale(0.8, 0.2);
+  -ms-transform: rotate(45deg) scale(0.8, 0.2);
+  -o-transform: rotate(45deg) scale(0.8, 0.2);
+  transform: rotate(45deg) scale(0.8, 0.2);
 }
-.marka.marka-icon-arrow i:nth-child(2) {
-  -webkit-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
-  -moz-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
-  -ms-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
-  -o-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
-  transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
+.marka.marka-icon-times i:nth-child(2) {
+  -webkit-transform: rotate(-45deg) scale(0.8, 0.2);
+  -moz-transform: rotate(-45deg) scale(0.8, 0.2);
+  -ms-transform: rotate(-45deg) scale(0.8, 0.2);
+  -o-transform: rotate(-45deg) scale(0.8, 0.2);
+  transform: rotate(-45deg) scale(0.8, 0.2);
 }
-.marka.marka-icon-arrow i:nth-child(3) {
-  -webkit-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
-  -moz-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
-  -ms-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
-  -o-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
-  transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
+
+/* Plus icon */
+.marka.marka-icon-plus i {
+  -webkit-transform: scale(0.8, 0.2);
+  -moz-transform: scale(0.8, 0.2);
+  -ms-transform: scale(0.8, 0.2);
+  -o-transform: scale(0.8, 0.2);
+  transform: scale(0.8, 0.2);
+}
+.marka.marka-icon-plus i:nth-child(2) {
+  -webkit-transform: rotate(90deg) scale(0.8, 0.2);
+  -moz-transform: rotate(90deg) scale(0.8, 0.2);
+  -ms-transform: rotate(90deg) scale(0.8, 0.2);
+  -o-transform: rotate(90deg) scale(0.8, 0.2);
+  transform: rotate(90deg) scale(0.8, 0.2);
+}
+
+/* Minus icon */
+.marka.marka-icon-minus i {
+  -webkit-transform: scale(0.8, 0.2);
+  -moz-transform: scale(0.8, 0.2);
+  -ms-transform: scale(0.8, 0.2);
+  -o-transform: scale(0.8, 0.2);
+  transform: scale(0.8, 0.2);
+}
+
+/* Check icon */
+.marka.marka-icon-check i {
+  -webkit-transform: rotate(-45deg) scale(0.75, 0.2) translate(10%, 50%);
+  -moz-transform: rotate(-45deg) scale(0.75, 0.2) translate(10%, 50%);
+  -ms-transform: rotate(-45deg) scale(0.75, 0.2) translate(10%, 50%);
+  -o-transform: rotate(-45deg) scale(0.75, 0.2) translate(10%, 50%);
+  transform: rotate(-45deg) scale(0.75, 0.2) translate(10%, 50%);
+}
+.marka.marka-icon-check i:nth-child(2) {
+  -webkit-transform: rotate(45deg) scale(0.5, 0.2) translate(-10%, 120%);
+  -moz-transform: rotate(45deg) scale(0.5, 0.2) translate(-10%, 120%);
+  -ms-transform: rotate(45deg) scale(0.5, 0.2) translate(-10%, 120%);
+  -o-transform: rotate(45deg) scale(0.5, 0.2) translate(-10%, 120%);
+  transform: rotate(45deg) scale(0.5, 0.2) translate(-10%, 120%);
 }
 
 /* Bars icon */
@@ -107,6 +141,29 @@
   transform: scale(0.8, 0.2) translate(0%, 140%);
 }
 
+/* Arrow icon */
+.marka.marka-icon-arrow i {
+  -webkit-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
+  -moz-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
+  -ms-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
+  -o-transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
+  transform: rotate(45deg) scale(0.55, 0.2) translate(-0.5%, -90%);
+}
+.marka.marka-icon-arrow i:nth-child(2) {
+  -webkit-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
+  -moz-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
+  -ms-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
+  -o-transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
+  transform: rotate(135deg) scale(0.55, 0.2) translate(-0.5%, 90%);
+}
+.marka.marka-icon-arrow i:nth-child(3) {
+  -webkit-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
+  -moz-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
+  -ms-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
+  -o-transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
+  transform: rotate(90deg) scale(0.6, 0.2) translate(17%, 0%);
+}
+
 /* Angle icon */
 .marka.marka-icon-angle i {
   -webkit-transform: rotate(45deg) scale(0.4, 0.1) translate(20%, -75%);
@@ -122,20 +179,3 @@
   -o-transform: rotate(135deg) scale(0.4, 0.1) translate(20%, 75%);
   transform: rotate(135deg) scale(0.4, 0.1) translate(20%, 75%);
 }
-
-/* Plus icon */
-.marka.marka-icon-plus i {
-  -webkit-transform: scale(0.8, 0.2);
-  -moz-transform: scale(0.8, 0.2);
-  -ms-transform: scale(0.8, 0.2);
-  -o-transform: scale(0.8, 0.2);
-  transform: scale(0.8, 0.2);
-}
-.marka.marka-icon-plus i:nth-child(2) {
-  -webkit-transform: rotate(90deg) scale(0.8, 0.2);
-  -moz-transform: rotate(90deg) scale(0.8, 0.2);
-  -ms-transform: rotate(90deg) scale(0.8, 0.2);
-  -o-transform: rotate(90deg) scale(0.8, 0.2);
-  transform: rotate(90deg) scale(0.8, 0.2);
-}
-

@@ -1,16 +1,14 @@
 <div ng-controller="ForumsPostsCtrl">
-
-
-<div infinite-scroll="loadMoreTopics()">
-
-
-  <md-card ng-repeat="topic in posts.liste_topics.topic" ui-sref="forums.topics.view({id: {{topic.fid}}, topic: {{topic.id}}})">
+  <div infinite-scroll="loadMoreTopics()">
+    <md-card ng-repeat="topic in posts.liste_topics.topic" ui-sref="forums.topics.view({id: {{topic.fid}}, topic: {{topic.id}}})">
       <h4>{{topic.titre}}</h4>
-  </md-card>
-
-  <div layout="horizontal" layout-align="center">
-    <md-progress-circular mode="indeterminate" ng-if="more"></md-progress-circular>
+    </md-card>
+    <div layout="horizontal" layout-align="center">
+      <md-progress-circular mode="indeterminate" ng-if="more">
+      </md-progress-circular>
+    </div>
   </div>
-</div>
-
+  <md-button class="md-theme-light-blue" id="floating-add-button" aria-label="Ajouter un nouveau post" ng-click="addTopic()" ng-class="{clicked: postMode, 'md-button-fab': !postMode}">
+      <i class="mdi-content-add" ng-class="{postMode: postMode}"></i>
+  </md-button>
 </div>

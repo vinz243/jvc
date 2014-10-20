@@ -30,5 +30,4 @@ do ->
       buttonCallback[uid] = opts.callback
       return
 
-
   ]

@@ -7,9 +7,15 @@ config =
 jvcApp.config ['$httpProvider', ($httpProvider) ->
 
     $httpProvider.defaults.headers.common['Authorization'] = "Basic YXBwX2FuZF9tczpEOSFtVlI0Yw=="
+
     return
 ]
+jvcApp.run ['$rootScope', ($rootScope) ->
 
+    $rootScope.$on '$stateChangeSuccess', (event, toState, toParams, fromState, fromParams) ->
+      $rootScope.containerClass = toState.containerClass;
+    return
+]
 do ->
   navbar = {
     title: "..."
