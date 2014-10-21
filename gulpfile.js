@@ -13,45 +13,35 @@ var iconfontCss = require('gulp-iconfont-css');
 
 
 var paths = {
-  sass: ['./www/**/*.scss'],
+  sass: ['./src/**/*.scss'],
   coffee: [
-    './www/coffee/app.coffee',
-    './www/coffee/xml2json.coffee',
-    './www/coffee/controllers/**/*.coffee',
-    './www/coffee/router.coffee',
-    './www/coffee/**/*.coffee'
+    './src/coffee/app.coffee',
+    './src/coffee/xml2json.coffee',
+    './src/coffee/controllers/**/*.coffee',
+    './src/coffee/router.coffee',
+    './src/coffee/**/*.coffee'
   ],
   css: [
 //     './www/lib/semantic-ui/build/packaged/definitions/css/semantic.min.css'
-     './www/lib/angular-material/angular-material.min.css',
-    './www/lib/ionicons/css/ionicons.min.css'
+     './lib/angular-material/angular-material.min.css',
+    './lib/ionicons/css/ionicons.min.css'
   ],
   js: [
-    './www/lib/jquery/dist/jquery.min.js',
-    './www/lib/angular/angular.js',
-    './www/lib/angular-ui-router/release/angular-ui-router.min.js',
-    './www/lib/angular-aria/angular-aria.js',
-    './www/lib/angular-animate/angular-animate.js',
-    './www/lib/hammerjs/hammer.js',
-    './www/lib/angular-material/angular-material.min.js',
-    './www/lib/ngInfiniteScroll/build/ng-infinite-scroll.min.js',
-    "./www/lib/marka/dist/js/marka.js",
+    './lib/jquery/dist/jquery.min.js',
+    './lib/angular/angular.js',
+    './lib/angular-ui-router/release/angular-ui-router.min.js',
+    './lib/angular-aria/angular-aria.js',
+    './lib/angular-animate/angular-animate.js',
+    './lib/hammerjs/hammer.js',
+    './lib/angular-material/angular-material.min.js',
+    './lib/ngInfiniteScroll/build/ng-infinite-scroll.min.js',
+    "./lib/marka/dist/js/marka.js",
 //    './www/lib/angular-bindonce/bindonce.js',
-  ],
-  svg: [
-    './www/lib/material-design-icons/**/*_48px.svg'
   ]
 };
-//var svgSprite = require("gulp-svg-sprites");
-
-gulp.task('sprites', function () {
-    return gulp.src(paths.svg)
-        .pipe(svgSprite())
-        .pipe(gulp.dest("assets"));
-});
 gulp.task('default', ['sass']);
 gulp.task('sass', function(done) {
-  gulp.src('./www/sass/**.scss')
+  gulp.src(paths.sass)
     .pipe(sass({
       errLogToConsole: true
     }))
@@ -91,19 +81,4 @@ gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass'])
   gulp.watch(paths.coffee, ['coffee'])
 });
-gulp.task('iconfont', function(done){
-  gulp.src(paths.svg)
-    .pipe(iconfontCss({
-      fontName: 'material-design', // required
-      path: './www/sass/templates/_icons.scss',
-      targetPath: '../sass/_icons.scss',
-      fontPath: '/fonts/',
-      fixedWidth: true,
-      normalize: true,
-      log: console.log
-    })).pipe(iconfont({
-      fontName: 'material-design', // required
-    }))
-    .pipe(gulp.dest('./www/fonts/'))
-    .on('end', done);
-});
+gulp.task('build', ['vendors', 'coffee', 'sass']);
