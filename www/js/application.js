@@ -21,127 +21,6 @@ jvcApp.run([
   }
 ]);
 
-(function() {
-  var listeners, markaCache, navbar;
-  navbar = {
-    title: "...",
-    buttons: []
-  };
-  listeners = {};
-  jvcApp.factory("navbar", [
-    '$rootScope', function($rootScope) {
-      navbar = {
-        title: "...",
-        buttons: []
-      };
-      return {
-        setTitle: function(newTitle) {
-          var call, _i, _len, _ref, _results;
-          navbar.title = newTitle;
-          _ref = listeners.onTitle;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            call = _ref[_i];
-            _results.push(call(newTitle));
-          }
-          return _results;
-        },
-        addButton: function(opts) {
-          var call, _i, _len, _ref, _results;
-          navbar.buttons.push(opts);
-          _ref = listeners.onButton;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            call = _ref[_i];
-            _results.push(call(opts));
-          }
-          return _results;
-        },
-        setNavButton: function(opts) {
-          var call, _i, _len, _ref, _results;
-          navbar.navButton = opts;
-          _ref = listeners.onNavButton;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            call = _ref[_i];
-            _results.push(call(opts));
-          }
-          return _results;
-        },
-        addHook: function(domain, func) {
-          if (!listeners[domain]) {
-            listeners[domain] = [];
-          }
-          return listeners[domain].push(func);
-        }
-      };
-    }
-  ]);
-  jvcApp.directive("goClick", [
-    '$location', '$state', function($location, $state) {
-      return function(scope, element, attrs) {
-        var params, path;
-        path = void 0;
-        params = void 0;
-        attrs.$observe("goClick", function(val) {
-          val = val.replace(/\{\{(.+)\}\}/g, function(str, val) {
-            return eval('scope.' + val);
-          });
-          val = val.replace(/\((.+)\)/, function(str, value) {
-            params = eval("(" + value + ")");
-            return "";
-          });
-          path = val;
-        });
-        element.bind("click", function() {
-          scope.$apply(function() {
-            if (path && path !== "") {
-              console.log(params);
-              $state.go(path, params);
-            }
-          });
-        });
-      };
-    }
-  ]);
-  markaCache = {};
-  return jvcApp.directive("markaIcon", function($location) {
-    return function(scope, element, attrs) {
-      var $el, id, marka;
-      $el = $(element);
-      id = $el.attr('id');
-      marka = new Marka('#' + id);
-      return attrs.$observe("markaIcon", function(val) {
-        marka.set(val.split(' ')[0]);
-        marka.color(val.split(' ')[1]);
-        marka.size(val.split(' ')[2]);
-        if (val.split(' ')[3]) {
-          marka.rotate(val.split(' ')[3]);
-        }
-      });
-    };
-  });
-})();
-
-jvcApp.factory("$localstorage", [
-  "$window", function($window) {
-    return {
-      set: function(key, value) {
-        $window.localStorage[key] = value;
-      },
-      get: function(key, defaultValue) {
-        return $window.localStorage[key] || defaultValue;
-      },
-      setObject: function(key, value) {
-        $window.localStorage[key] = JSON.stringify(value);
-      },
-      getObject: function(key) {
-        return JSON.parse($window.localStorage[key] || "{}");
-      }
-    };
-  }
-]);
-
 var defaultOptions, normalize, parseXML, xml2json, xml2jsonImpl;
 
 parseXML = function(data) {
@@ -663,6 +542,55 @@ jvcApp.config([
 ]);
 
 (function() {
+  return jvcApp.directive("markaIcon", function($location) {
+    return function(scope, element, attrs) {
+      var $el, id, marka;
+      $el = $(element);
+      id = $el.attr('id');
+      marka = new Marka('#' + id);
+      return attrs.$observe("markaIcon", function(val) {
+        marka.set(val.split(' ')[0]);
+        marka.color(val.split(' ')[1]);
+        marka.size(val.split(' ')[2]);
+        if (val.split(' ')[3]) {
+          marka.rotate(val.split(' ')[3]);
+        }
+      });
+    };
+  });
+})();
+
+(function() {
+  return jvcApp.directive("goClick", [
+    '$location', '$state', function($location, $state) {
+      return function(scope, element, attrs) {
+        var params, path;
+        path = void 0;
+        params = void 0;
+        attrs.$observe("goClick", function(val) {
+          val = val.replace(/\{\{(.+)\}\}/g, function(str, val) {
+            return eval('scope.' + val);
+          });
+          val = val.replace(/\((.+)\)/, function(str, value) {
+            params = eval("(" + value + ")");
+            return "";
+          });
+          path = val;
+        });
+        element.bind("click", function() {
+          scope.$apply(function() {
+            if (path && path !== "") {
+              console.log(params);
+              $state.go(path, params);
+            }
+          });
+        });
+      };
+    }
+  ]);
+})();
+
+(function() {
   var isConnected, sid, user;
   isConnected = false;
   user = void 0;
@@ -723,6 +651,27 @@ jvcApp.config([
             });
           }
           return deferred.promise;
+        }
+      };
+    }
+  ]);
+})();
+
+(function() {
+  return jvcApp.factory("$localstorage", [
+    "$window", function($window) {
+      return {
+        set: function(key, value) {
+          $window.localStorage[key] = value;
+        },
+        get: function(key, defaultValue) {
+          return $window.localStorage[key] || defaultValue;
+        },
+        setObject: function(key, value) {
+          $window.localStorage[key] = JSON.stringify(value);
+        },
+        getObject: function(key) {
+          return JSON.parse($window.localStorage[key] || "{}");
         }
       };
     }
@@ -910,3 +859,61 @@ jvcApp.service("$md5", [
     return md5;
   }
 ]);
+
+(function() {
+  var listeners, navbar;
+  navbar = {
+    title: "...",
+    buttons: []
+  };
+  listeners = {};
+  return jvcApp.factory("navbar", [
+    '$rootScope', function($rootScope) {
+      navbar = {
+        title: "...",
+        buttons: []
+      };
+      return {
+        setTitle: function(newTitle) {
+          var call, _i, _len, _ref, _results;
+          navbar.title = newTitle;
+          _ref = listeners.onTitle;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            call = _ref[_i];
+            _results.push(call(newTitle));
+          }
+          return _results;
+        },
+        addButton: function(opts) {
+          var call, _i, _len, _ref, _results;
+          navbar.buttons.push(opts);
+          _ref = listeners.onButton;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            call = _ref[_i];
+            _results.push(call(opts));
+          }
+          return _results;
+        },
+        setNavButton: function(opts) {
+          var call, _i, _len, _ref, _results;
+          navbar.navButton = opts;
+          _ref = listeners.onNavButton;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            call = _ref[_i];
+            _results.push(call(opts));
+          }
+          return _results;
+        },
+        addHook: function(domain, func) {
+          if (!listeners[domain]) {
+            listeners[domain] = [];
+          }
+          return listeners[domain].push(func);
+        }
+      };
+    }
+  ]);
+})();
