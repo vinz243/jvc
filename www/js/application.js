@@ -287,7 +287,7 @@ jvcApp.controller('ForumsAddPostsCtrl', [
 ]);
 
 jvcApp.controller('ForumsIndexCtrl', [
-  '$scope', '$http', 'navbar', function($scope, $http, navbar) {
+  '$scope', '$jvcApi', 'navbar', function($scope, $jvcApi, navbar) {
     $scope.loading = true;
     navbar.setTitle('Veuillez patienter...');
     navbar.setNavButton({
@@ -296,47 +296,7 @@ jvcApp.controller('ForumsIndexCtrl', [
       link: 'index'
     });
     return setTimeout(function() {
-      return $http.get(config.domain + '/forums_index.xml').success(function(data) {
-        var forums, list, sec, section, sub, sublist, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _section;
-        list = xml2json(data);
-        forums = [];
-        _ref = list.listeforums.section;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          section = _ref[_i];
-          _section = {};
-          _section.name = section.nom;
-          _section.rank = section.rang;
-          _section.subsections = [];
-          sublist = [];
-          if (Array.isArray(section.sous_section)) {
-            _ref1 = section.sous_section;
-            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              sec = _ref1[_j];
-              if (Array.isArray(sec.ligne)) {
-                _ref2 = sec.ligne;
-                for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-                  sub = _ref2[_k];
-                  sublist.push(sub);
-                }
-              } else {
-                _ref3 = sec.ligne.forum;
-                for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-                  sub = _ref3[_l];
-                  sublist.push(sub);
-                }
-              }
-            }
-          } else if ((_ref4 = section.sous_section.ligne) != null ? _ref4.forum : void 0) {
-            sublist = section.sous_section.ligne.forum;
-          } else if (section.sous_section.ligne) {
-            sublist = section.sous_section.ligne;
-          }
-          for (_m = 0, _len4 = sublist.length; _m < _len4; _m++) {
-            sub = sublist[_m];
-            _section.subsections.push(sub);
-          }
-          forums.push(_section);
-        }
+      return $jvcApi.getForumsList().then(function(forums) {
         $scope.forums = forums;
         $scope.loading = false;
         navbar.setTitle('Liste des forums');
@@ -349,7 +309,7 @@ jvcApp.controller('ForumsIndexCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostCtrl', [
-  '$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', function($scope, $http, $routeParams, $sce, navbar, $auth, $q) {
+  '$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', '$jvcApi', function($scope, $http, $routeParams, $sce, navbar, $auth, $q, $jvcApi) {
     var isBusy, page;
     $scope.loading = true;
     page = 1;
@@ -410,39 +370,15 @@ jvcApp.controller('ForumsPostCtrl', [
         return;
       }
       isBusy = true;
-      return $http.get(config.domain + '/forums/1-' + $routeParams.id + '-' + $routeParams.topic + '-' + page + '-0-1-0-0.xml').success(function(data) {
-        var $content, posts, res;
-        if (!data || data === "") {
-          $scope.more = false;
-          return;
-        }
-        res = xml2json(data);
-        if (!$scope.$$phase) {
-          $scope.$digest();
-        }
-        $content = $($.parseXML("<content>" + res.detail_topic.contenu + "</content>"));
-        posts = [];
-        $content.find('ul').each(function(index) {
-          var $el, obj;
-          obj = {};
-          $el = $(this);
-          $el.find('a.pseudo').find('b').remove();
-          $el.find('.date').find('a').remove();
-          $el.find('.date').find('span').replaceWith('sur <i class="icon ion-iphone"></i>');
-          obj.author = $sce.trustAsHtml($el.find('a.pseudo').html());
-          obj.body = $sce.trustAsHtml($el.find('.message').html());
-          obj.ts = $el.find('.date').html();
-          obj.title = $sce.trustAsHtml(obj.author + ' - ' + obj.ts);
-          return posts.push(obj);
-        });
-        $scope.posts = posts;
-        navbar.setTitle(res.detail_topic.sujet_topic);
+      return $jvcApi.getMessageList($routeParams.id, $routeParams.topic, page).then(function(data) {
+        $scope.posts = data.posts;
+        navbar.setTitle(data.response.detail_topic.sujet_topic);
         if (!$scope.$$phase) {
           $scope.digest();
         }
         page = page + 1;
         return isBusy = false;
-      }).error(function(data) {
+      })["catch"](function(data) {
         $scope.more = false;
         if (!$scope.$$phase) {
           return $scope.digest();
@@ -454,7 +390,7 @@ jvcApp.controller('ForumsPostCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostsCtrl', [
-  '$scope', '$http', '$stateParams', 'navbar', '$state', function($scope, $http, $routeParams, navbar, $state) {
+  '$scope', '$http', '$stateParams', 'navbar', '$state', '$jvcApi', function($scope, $http, $routeParams, navbar, $state, $jvcApi) {
     var busy, page;
     $scope.loading = true;
     $scope.urls = {
@@ -483,17 +419,7 @@ jvcApp.controller('ForumsPostsCtrl', [
         return;
       }
       busy = true;
-      return $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-' + page + '-0-0.xml').success(function(data) {
-        var list, matched, re, topic, _i, _len, _ref;
-        list = xml2json(data);
-        _ref = list.liste_topics.topic;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          topic = _ref[_i];
-          re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
-          matched = re.exec(topic.lien_topic);
-          topic.fid = matched[1];
-          topic.id = matched[2];
-        }
+      return $jvcApi.getTopicList($routeParams.id, page).then(function(list) {
         $scope.posts = list;
         $scope.loading = false;
         navbar.setTitle($scope.posts.liste_topics.nom_forum);
@@ -585,6 +511,177 @@ jvcApp.config([
             }
           });
         });
+      };
+    }
+  ]);
+})();
+
+(function() {
+  var EBUSY, ENET, ENOTIMP, buildError, getForumContent, isBusy, loadForums;
+  isBusy = false;
+  buildError = function(message, code) {
+    var err;
+    err = new Error(message);
+    err.id = code;
+    return err;
+  };
+  EBUSY = buildError("There is already a task in progress. Please retry later", "ENET");
+  ENET = buildError("The http request failed");
+  ENOTIMP = buildError("This function is not implemented yet");
+
+  /*
+  @param Q the $q object passed by $jvcAPi factory
+  @param mode what to do if busy. ABORT, CONTINUE or WAIT
+   */
+  loadForums = function(Q, $http, mode) {
+    var deferred;
+    if (mode == null) {
+      mode = "ABORT";
+    }
+    deferred = Q.defer();
+    if (isBusy && mode === "ABORT") {
+      deferred.reject(EBUSY);
+      return deferred.promise;
+    }
+    isBusy = true;
+    $http.get(config.domain + '/forums_index.xml').then(function(data) {
+      var forums, list, sec, section, sub, sublist, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _section;
+      list = xml2json(data.data);
+      forums = [];
+      _ref = list.listeforums.section;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        section = _ref[_i];
+        _section = {};
+        _section.name = section.nom;
+        _section.rank = section.rang;
+        _section.subsections = [];
+        sublist = [];
+        if (Array.isArray(section.sous_section)) {
+          _ref1 = section.sous_section;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            sec = _ref1[_j];
+            if (Array.isArray(sec.ligne)) {
+              _ref2 = sec.ligne;
+              for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+                sub = _ref2[_k];
+                sublist.push(sub);
+              }
+            } else {
+              _ref3 = sec.ligne.forum;
+              for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+                sub = _ref3[_l];
+                sublist.push(sub);
+              }
+            }
+          }
+        } else if ((_ref4 = section.sous_section.ligne) != null ? _ref4.forum : void 0) {
+          sublist = section.sous_section.ligne.forum;
+        } else if (section.sous_section.ligne) {
+          sublist = section.sous_section.ligne;
+        }
+        for (_m = 0, _len4 = sublist.length; _m < _len4; _m++) {
+          sub = sublist[_m];
+          _section.subsections.push(sub);
+        }
+        forums.push(_section);
+      }
+      console.log("resolve");
+      return deferred.resolve(forums);
+    })["catch"](function(data, status, headers, config) {
+      return deferred.reject(ENET);
+    })["finally"](function() {
+      return isBusy = false;
+    });
+    return deferred.promise;
+  };
+
+  /*
+  Returns a topic or a message
+   */
+  getForumContent = function(Q, $http, mode, forumId, topicId, page) {
+    var deferred;
+    if (mode == null) {
+      mode = "ABORT";
+    }
+    if (topicId == null) {
+      topicId = 0;
+    }
+    if (page == null) {
+      page = 1;
+    }
+    deferred = Q.defer();
+    if (isBusy && mode === "ABORT") {
+      deferred.reject(EBUSY);
+      return deferred.promise;
+    }
+    isBusy = true;
+    $http.get("" + config.domain + "/forums/" + (topicId !== 0 ? 1 : 0) + "-" + forumId + "-" + topicId + "-1-0-" + page + "-0-0.xml").then(function(data) {
+      return deferred.resolve(xml2json(data.data));
+    })["catch"](function() {
+      return deferred.reject(ENET);
+    })["finally"](function() {
+      return isBusy = false;
+    });
+    return deferred.promise;
+  };
+  return jvcApp.factory('$jvcApi', [
+    '$http', '$q', '$sce', function($http, $q, $sce) {
+      return {
+        getForumsList: function() {
+          return loadForums($q, $http);
+        },
+        getTopicList: function(id, page, mode) {
+          if (page == null) {
+            page = 1;
+          }
+          if (mode == null) {
+            mode = "ABORT";
+          }
+          return getForumContent($q, $http, mode, id, 0, page).then(function(list) {
+            var matched, re, topic, _i, _len, _ref;
+            _ref = list.liste_topics.topic;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              topic = _ref[_i];
+              re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
+              matched = re.exec(topic.lien_topic);
+              topic.fid = matched[1];
+              topic.id = matched[2];
+            }
+            return list;
+          });
+        },
+        getMessageList: function(id, topicId, page, mode) {
+          if (page == null) {
+            page = 2;
+          }
+          if (mode == null) {
+            mode = "ABORT";
+          }
+          return getForumContent($q, $http, mode, id, topicId, page).then(function(data) {
+            var $content, posts, res;
+            res = data;
+            console.log(res);
+            $content = $($.parseXML("<content>" + res.detail_topic.contenu + "</content>"));
+            posts = [];
+            $content.find('ul').each(function(index) {
+              var $el, obj;
+              obj = {};
+              $el = $(this);
+              $el.find('a.pseudo').find('b').remove();
+              $el.find('.date').find('a').remove();
+              $el.find('.date').find('span').replaceWith('sur <i class="icon ion-iphone"></i>');
+              obj.author = $sce.trustAsHtml($el.find('a.pseudo').html());
+              obj.body = $sce.trustAsHtml($el.find('.message').html());
+              obj.ts = $el.find('.date').html();
+              obj.title = $sce.trustAsHtml(obj.author + ' - ' + obj.ts);
+              return posts.push(obj);
+            });
+            return {
+              response: res,
+              posts: posts
+            };
+          });
+        }
       };
     }
   ]);

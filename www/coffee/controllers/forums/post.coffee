@@ -1,4 +1,4 @@
-jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', ($scope, $http, $routeParams, $sce, navbar, $auth, $q) ->
+jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', '$jvcApi', ($scope, $http, $routeParams, $sce, navbar, $auth, $q, $jvcApi) ->
   $scope.loading = true
   page = 1
   $scope.more = true
@@ -51,35 +51,14 @@ jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$stateParams', '$sce', 
 
     if not $scope.more or isBusy then return
     isBusy = true
-    $http.get(config.domain + '/forums/1-' + $routeParams.id + '-' + $routeParams.topic + '-' + page + '-0-1-0-0.xml').success (data) ->
-      if not data or data is ""
-        $scope.more = false
-        return
-      res = xml2json data
 
-
-      if not $scope.$$phase then $scope.$digest()
-      $content = $ $.parseXML("<content>" + res.detail_topic.contenu + "</content>")
-      posts = []
-      $content.find('ul').each (index) ->
-        obj = {}
-        $el = $(this)
-        $el.find('a.pseudo').find('b').remove()
-
-        $el.find('.date').find('a').remove()
-        $el.find('.date').find('span').replaceWith('sur <i class="icon ion-iphone"></i>')
-        obj.author = $sce.trustAsHtml $el.find('a.pseudo').html()
-        obj.body = $sce.trustAsHtml $el.find('.message').html()
-        obj.ts = $el.find('.date').html()
-        obj.title = $sce.trustAsHtml(obj.author + ' - ' + obj.ts)
-        posts.push obj
-
-      $scope.posts = posts
-      navbar.setTitle res.detail_topic.sujet_topic
+    $jvcApi.getMessageList($routeParams.id, $routeParams.topic,  page).then (data) ->
+      $scope.posts = data.posts
+      navbar.setTitle data.response.detail_topic.sujet_topic
       if not $scope.$$phase then $scope.digest()
       page = page + 1
       isBusy = false
-    .error (data) ->
+    .catch (data) ->
       $scope.more = false
       if not $scope.$$phase then $scope.digest()
 

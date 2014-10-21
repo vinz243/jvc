@@ -1,4 +1,4 @@
-jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar', '$state', ($scope, $http, $routeParams, navbar, $state) ->
+jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar', '$state', '$jvcApi', ($scope, $http, $routeParams, navbar, $state, $jvcApi) ->
   $scope.loading = true
   $scope.urls =
     back: '#/forums'
@@ -17,15 +17,7 @@ jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar
   $scope.loadMoreTopics = ->
     if not $scope.more or busy then return
     busy = true
-    $http.get(config.domain + '/forums/0-' + $routeParams.id + '-0-1-0-' + page + '-0-0.xml').success (data) ->
-      list = xml2json(data)
-      # process urls:
-      for topic in list.liste_topics.topic
-        re = /jv:\/\/forums\/.-(\d+)-(\d+).+/i;
-        matched = re.exec topic.lien_topic
-        topic.fid = matched[1]
-        topic.id = matched[2]
-
+    $jvcApi.getTopicList($routeParams.id, page).then (list) ->
       $scope.posts = list
       $scope.loading = false
       navbar.setTitle $scope.posts.liste_topics.nom_forum

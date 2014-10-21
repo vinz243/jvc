@@ -1,35 +1,15 @@
-jvcApp.controller 'ForumsIndexCtrl', ['$scope', '$http', 'navbar', ($scope, $http, navbar) ->
+jvcApp.controller 'ForumsIndexCtrl', ['$scope', '$jvcApi', 'navbar', ($scope, $jvcApi, navbar) ->
   $scope.loading = true
-  
+
   navbar.setTitle 'Veuillez patienter...'
   navbar.setNavButton icon: 'arrow', rotation: 'left', link: 'index'
+
   setTimeout ->
-    $http.get(config.domain + '/forums_index.xml').success (data) ->
-      list = xml2json(data)
-      # normalize
-      forums = []
-      for section in list.listeforums.section
-        _section = {}
-        _section.name = section.nom
-        _section.rank = section.rang
-        _section.subsections = []
-        sublist = []
-        if Array.isArray section.sous_section
-          for sec in section.sous_section
-            if Array.isArray sec.ligne
-              for sub in sec.ligne
-                sublist.push sub
-            else
-              for sub in sec.ligne.forum
-                sublist.push sub
-        else if section.sous_section.ligne?.forum then sublist = section.sous_section.ligne.forum
-        else if section.sous_section.ligne then sublist = section.sous_section.ligne
-        for sub in sublist
-          _section.subsections.push sub
-        forums.push _section
+    $jvcApi.getForumsList().then (forums) ->
       $scope.forums = forums
       $scope.loading = false
       navbar.setTitle 'Liste des forums'
       if not $scope.$$phase then $scope.$digest()
+
   , 600
 ]
