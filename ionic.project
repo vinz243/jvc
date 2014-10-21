@@ -2,7 +2,7 @@
   "name": "jvc",
   "email": "",
   "app_id": "",
-  "package_name": "",
+  "package_name": "com.vinz243.jvc",
   "watchPatterns": ["www/**/*", "!www/lib/**/*", "!www/**/*.scss", "!www/**/*.coffee"]
 
 }

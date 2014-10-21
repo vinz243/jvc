@@ -77,8 +77,121 @@ do ->
 
     deferred.promise
 
+  getPostParams = ($http, forumId, topicId=0) ->
+    return $http(
+        method: "GET"
+        url:  "#{config.domain}/forums/5-#{forumId}-#{topicId}-1-0-1-0-0.xml"
+        withCredentials: true
+        # headers:
+          # "Cookie": "wenvjgol=#{sid}"
+    )
 
-  jvcApp.factory '$jvcApi', ['$http', '$q', '$sce', ($http, $q, $sce) ->
+  postMessage = ($http, params, content, subject, captcha) ->
+    data = {
+      yournewmessage: content
+    }
+    data.newsujet = subject if subject
+    data.code = captcha if captcha
+    $http(
+      method: "POST"
+      url: config.domain + '/cgi-bin/jvforums/forums.cgi'
+      data: params + '&' + $.param data
+      withCredentials: true
+      headers:
+        "Content-Type": "application/x-www-form-urlencoded"
+    )
+
+  promptCaptchaAndPost = ($http, params, content, subject, captcha) ->
+    $mdDialog.show(
+      controller: 'CaptchaDialogCtrl',
+      event: $event,
+      clickOutsideToClose: false,
+      template: """
+          <md-dialog>
+             <div class="dialog-content">
+               <div >
+                  Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br /> <br />
+                  <div layout="horizontal" layout-align="center" padding>
+                    <img src="#{data.new_topic.erreur.captcha}" />
+                  </div>
+                  <br />
+                  <br />
+                  <div layout="horizontal" layout-align="center" padding>
+                    <md-text-float label="Votre r&eacute;ponse" ng-model="code"> </md-text-float>
+                  </div>
+               </div>
+             </div>
+             <div class="dialog-actions">
+              <md-button ng-click="cancel()">
+                Annuler
+              </md-button>
+              <md-button ng-click="validate()" class="md-theme-green">
+                Valider
+              </md-button>
+            </div>
+          </md-dialog>
+      """
+    ).then (r) ->
+      $http(
+        method: "POST"
+        url: config.domain + '/cgi-bin/jvforums/forums.cgi'
+        data:  params + r.code
+        withCredentials: true
+        headers:
+          "Content-Type": "application/x-www-form-urlencoded"
+      )
+    .then (res) ->
+      if data["new_#{if opts.topicId then 'message' else 'topic'}"]?.erreur?.captcha
+        params = data["new_#{if opts.topicId then 'message' else 'topic'}"].params_form
+        return promptCaptchaAndPost($http, params, content, subject, captcha)
+      return {status: "done"}
+
+
+  ###
+  @param opts
+    topicId the target topic if the message is an anwser
+    forumId the forum target id
+    body    the message body
+    title   the message subject if it's a new topic
+  ###
+  addNewContent = ($q, $http, sid, mode, opts) ->
+
+    getPostParams($http, opts.forumId, opts.topicId).then (res)->
+      # Wait 1"
+      deferred = $q.defer()
+
+      data = xml2json res.data
+      console.log data
+      params = data["new_#{if opts.topicId then 'message' else 'topic'}"].params_form
+
+      setTimeout ->
+        deferred.resolve params
+      , 1100
+
+      deferred.promise
+
+    .then (params) ->
+
+      # Post the message
+      return postMessage($http, params, opts.body, opts.title)
+
+    .then (res) ->
+      data = xml2json res.data
+      deferred = $q.defer()
+
+      if data.new_topic?.erreur?.captcha
+        params = data.new_topic.params_form
+
+        return promptCaptchaAndPost($http, params, opts.body, opts.title)
+
+      else if data.new_topic?.erreur
+        deferred.reject data.new_topic.erreur.texte_erreur
+
+      deferred.resolve res
+      deferred.promise
+
+
+  jvcApp.factory '$jvcApi', ['$http', '$q', '$sce', '$auth', '$mdToast', ($http, $q, $sce, $auth) ->
       return {
         getForumsList: () ->
           loadForums $q, $http
@@ -112,6 +225,10 @@ do ->
               obj.title = $sce.trustAsHtml(obj.author + ' - ' + obj.ts)
               posts.push obj
             return {response: res, posts: posts}
+        postContent: (data) ->
+          $auth.getSID().then (sid) ->
+            addNewContent($q, $http, sid, "ABORT", data)
+
       }
 
   ]

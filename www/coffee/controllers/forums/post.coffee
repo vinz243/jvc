@@ -1,4 +1,4 @@
-jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', '$jvcApi', ($scope, $http, $routeParams, $sce, navbar, $auth, $q, $jvcApi) ->
+jvcApp.controller 'ForumsPostCtrl', ['$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', ($scope, $mdToast, $routeParams, navbar, $jvcApi, $state) ->
   $scope.loading = true
   page = 1
   $scope.more = true
@@ -11,41 +11,17 @@ jvcApp.controller 'ForumsPostCtrl', ['$scope', '$http', '$stateParams', '$sce', 
 
   $scope.sendMessage = ($event) ->
     params = {}
-    $auth.getSID($event).then (sid) ->
-      console.log 'sid is', sid
+    $jvcApi.postContent
+      forumId: $routeParams.id
+      topicId: $routeParams.topic
+      body: $scope.newMessageBody
+    .then (res) ->
+      $state.go $state.current, $routeParams, reload: true
+    .catch (err) ->
+      $mdToast.show
+        template: "<md-toast>Erreur : #{err.message or err.id or err}</md-toast>",
+        hideDelay: 3000
 
-      $http(
-        method: "GET"
-        url: "#{config.domain}/forums/5-#{$routeParams.id}-#{$routeParams.topic}-1-0-1-0-0.xml"
-        withCredentials: true
-        # headers:
-          # "Cookie": "wenvjgol=#{sid}"
-      )
-    .then ->
-      $http(
-        method: "GET"
-        url: "#{config.domain}/forums/5-#{$routeParams.id}-#{$routeParams.topic}-1-0-1-0-0.xml"
-        withCredentials: true
-        # headers:
-          # "Cookie": "wenvjgol=#{sid}"
-      )
-    .then (res)->
-      deferred = $q.defer()
-      data = xml2json res.data
-      params = data.new_message.params_form
-      console.log params
-      setTimeout deferred.resolve, 1250
-      deferred.promise
-    .then ->
-      $http(
-        method: "POST"
-        url: config.domain + '/cgi-bin/jvforums/forums.cgi'
-        data: params + '&yournewmessage=' + $scope.newMessageBody
-        withCredentials: true
-        headers:
-          "Content-Type": "application/x-www-form-urlencoded"
-      )
-    .then console.log
   isBusy = false
   $scope.loadMorePosts = ->
 

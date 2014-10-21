@@ -201,7 +201,7 @@ jvcApp.controller('IndexCtrl', [
 })();
 
 jvcApp.controller('ForumsAddPostsCtrl', [
-  '$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', '$mdDialog', '$mdToast', '$state', function($scope, $http, $routeParams, $sce, navbar, $auth, $q, $mdDialog, $mdToast, $state) {
+  '$scope', '$stateParams', 'navbar', '$auth', '$jvcApi', '$mdToast', '$state', function($scope, $routeParams, navbar, $auth, $jvcApi, $mdDialog, $mdToast, $state) {
     navbar.setTitle('Créer un nouveau sujet');
     navbar.setNavButton({
       icon: 'times',
@@ -210,75 +210,17 @@ jvcApp.controller('ForumsAddPostsCtrl', [
     return $scope.createTopic = function($event) {
       var params;
       params = {};
-      return $auth.getSID($event).then(function(sid) {
-        console.log('sid is', sid);
-        return $http({
-          method: "GET",
-          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-0-1-0-1-0-0.xml",
-          withCredentials: true
-        });
-      }).then(function() {
-        return $http({
-          method: "GET",
-          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-0-1-0-1-0-0.xml",
-          withCredentials: true
-        });
-      }).then(function(res) {
-        var data, deferred;
-        deferred = $q.defer();
-        data = xml2json(res.data);
-        params = data.new_topic.params_form;
-        console.log(params);
-        setTimeout(deferred.resolve, 1250);
-        return deferred.promise;
-      }).then(function() {
-        return $http({
-          method: "POST",
-          url: config.domain + '/cgi-bin/jvforums/forums.cgi',
-          data: params + '&' + $.param({
-            yournewmessage: $scope.content,
-            newsujet: $scope.subject
-          }),
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        });
-      }).then(function(res) {
-        var data, deferred, _ref, _ref1, _ref2;
-        data = xml2json(res.data);
-        deferred = $q.defer();
-        if ((_ref = data.new_topic) != null ? (_ref1 = _ref.erreur) != null ? _ref1.captcha : void 0 : void 0) {
-          params = data.new_topic.params_form;
-          return $mdDialog.show({
-            controller: 'CaptchaDialogCtrl',
-            event: $event,
-            clickOutsideToClose: false,
-            template: "<md-dialog>\n   <div class=\"dialog-content\">\n     <div >\n        Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <img src=\"" + data.new_topic.erreur.captcha + "\" />\n        </div>\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <md-text-float label=\"Votre r&eacute;ponse\" ng-model=\"code\"> </md-text-float>\n        </div>\n     </div>\n   </div>\n   <div class=\"dialog-actions\">\n    <md-button ng-click=\"cancel()\">\n      Annuler\n    </md-button>\n    <md-button ng-click=\"validate()\" class=\"md-theme-green\">\n      Valider\n    </md-button>\n  </div>\n</md-dialog>"
-          }).then(function(r) {
-            console.log('res', params + r.code);
-            return $http({
-              method: "POST",
-              url: config.domain + '/cgi-bin/jvforums/forums.cgi',
-              data: params + r.code,
-              withCredentials: true,
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-              }
-            });
-          });
-        } else if ((_ref2 = data.new_topic) != null ? _ref2.erreur : void 0) {
-          deferred.reject(data.new_topic.erreur.texte_erreur);
-        }
-        deferred.resolve(res);
-        return deferred.promise;
+      return $jvcApi.postContent({
+        forumId: $routeParams.id,
+        body: $scope.content,
+        subject: $scope.subject
       }).then(function(res) {
         return $state.go('forums.topics.list', {
           id: $routeParams.id
         });
       })["catch"](function(err) {
         return $mdToast.show({
-          template: "<md-toast>" + err.message + "</md-toast>",
+          template: "<md-toast>Erreur : " + (err.message || err.id || err) + "</md-toast>",
           hideDelay: 3000
         });
       });
@@ -309,7 +251,7 @@ jvcApp.controller('ForumsIndexCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostCtrl', [
-  '$scope', '$http', '$stateParams', '$sce', 'navbar', '$auth', '$q', '$jvcApi', function($scope, $http, $routeParams, $sce, navbar, $auth, $q, $jvcApi) {
+  '$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', function($scope, $mdToast, $routeParams, navbar, $jvcApi, $state) {
     var isBusy, page;
     $scope.loading = true;
     page = 1;
@@ -331,38 +273,20 @@ jvcApp.controller('ForumsPostCtrl', [
     $scope.sendMessage = function($event) {
       var params;
       params = {};
-      return $auth.getSID($event).then(function(sid) {
-        console.log('sid is', sid);
-        return $http({
-          method: "GET",
-          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-" + $routeParams.topic + "-1-0-1-0-0.xml",
-          withCredentials: true
-        });
-      }).then(function() {
-        return $http({
-          method: "GET",
-          url: "" + config.domain + "/forums/5-" + $routeParams.id + "-" + $routeParams.topic + "-1-0-1-0-0.xml",
-          withCredentials: true
-        });
+      return $jvcApi.postContent({
+        forumId: $routeParams.id,
+        topicId: $routeParams.topic,
+        body: $scope.newMessageBody
       }).then(function(res) {
-        var data, deferred;
-        deferred = $q.defer();
-        data = xml2json(res.data);
-        params = data.new_message.params_form;
-        console.log(params);
-        setTimeout(deferred.resolve, 1250);
-        return deferred.promise;
-      }).then(function() {
-        return $http({
-          method: "POST",
-          url: config.domain + '/cgi-bin/jvforums/forums.cgi',
-          data: params + '&yournewmessage=' + $scope.newMessageBody,
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
+        return $state.go($state.current, $routeParams, {
+          reload: true
         });
-      }).then(console.log);
+      })["catch"](function(err) {
+        return $mdToast.show({
+          template: "<md-toast>Erreur : " + (err.message || err.id || err) + "</md-toast>",
+          hideDelay: 3000
+        });
+      });
     };
     isBusy = false;
     $scope.loadMorePosts = function() {
@@ -517,7 +441,7 @@ jvcApp.config([
 })();
 
 (function() {
-  var EBUSY, ENET, ENOTIMP, buildError, getForumContent, isBusy, loadForums;
+  var EBUSY, ENET, ENOTIMP, addNewContent, buildError, getForumContent, getPostParams, isBusy, loadForums, postMessage, promptCaptchaAndPost;
   isBusy = false;
   buildError = function(message, code) {
     var err;
@@ -624,8 +548,101 @@ jvcApp.config([
     });
     return deferred.promise;
   };
+  getPostParams = function($http, forumId, topicId) {
+    if (topicId == null) {
+      topicId = 0;
+    }
+    return $http({
+      method: "GET",
+      url: "" + config.domain + "/forums/5-" + forumId + "-" + topicId + "-1-0-1-0-0.xml",
+      withCredentials: true
+    });
+  };
+  postMessage = function($http, params, content, subject, captcha) {
+    var data;
+    data = {
+      yournewmessage: content
+    };
+    if (subject) {
+      data.newsujet = subject;
+    }
+    if (captcha) {
+      data.code = captcha;
+    }
+    return $http({
+      method: "POST",
+      url: config.domain + '/cgi-bin/jvforums/forums.cgi',
+      data: params + '&' + $.param(data),
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    });
+  };
+  promptCaptchaAndPost = function($http, params, content, subject, captcha) {
+    return $mdDialog.show({
+      controller: 'CaptchaDialogCtrl',
+      event: $event,
+      clickOutsideToClose: false,
+      template: "<md-dialog>\n   <div class=\"dialog-content\">\n     <div >\n        Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br /> <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <img src=\"" + data.new_topic.erreur.captcha + "\" />\n        </div>\n        <br />\n        <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <md-text-float label=\"Votre r&eacute;ponse\" ng-model=\"code\"> </md-text-float>\n        </div>\n     </div>\n   </div>\n   <div class=\"dialog-actions\">\n    <md-button ng-click=\"cancel()\">\n      Annuler\n    </md-button>\n    <md-button ng-click=\"validate()\" class=\"md-theme-green\">\n      Valider\n    </md-button>\n  </div>\n</md-dialog>"
+    }).then(function(r) {
+      return $http({
+        method: "POST",
+        url: config.domain + '/cgi-bin/jvforums/forums.cgi',
+        data: params + r.code,
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      });
+    }).then(function(res) {
+      var _ref, _ref1;
+      if ((_ref = data["new_" + (opts.topicId ? 'message' : 'topic')]) != null ? (_ref1 = _ref.erreur) != null ? _ref1.captcha : void 0 : void 0) {
+        params = data["new_" + (opts.topicId ? 'message' : 'topic')].params_form;
+        return promptCaptchaAndPost($http, params, content, subject, captcha);
+      }
+      return {
+        status: "done"
+      };
+    });
+  };
+
+  /*
+  @param opts
+    topicId the target topic if the message is an anwser
+    forumId the forum target id
+    body    the message body
+    title   the message subject if it's a new topic
+   */
+  addNewContent = function($q, $http, sid, mode, opts) {
+    return getPostParams($http, opts.forumId, opts.topicId).then(function(res) {
+      var data, deferred, params;
+      deferred = $q.defer();
+      data = xml2json(res.data);
+      console.log(data);
+      params = data["new_" + (opts.topicId ? 'message' : 'topic')].params_form;
+      setTimeout(function() {
+        return deferred.resolve(params);
+      }, 1100);
+      return deferred.promise;
+    }).then(function(params) {
+      return postMessage($http, params, opts.body, opts.title);
+    }).then(function(res) {
+      var data, deferred, params, _ref, _ref1, _ref2;
+      data = xml2json(res.data);
+      deferred = $q.defer();
+      if ((_ref = data.new_topic) != null ? (_ref1 = _ref.erreur) != null ? _ref1.captcha : void 0 : void 0) {
+        params = data.new_topic.params_form;
+        return promptCaptchaAndPost($http, params, opts.body, opts.title);
+      } else if ((_ref2 = data.new_topic) != null ? _ref2.erreur : void 0) {
+        deferred.reject(data.new_topic.erreur.texte_erreur);
+      }
+      deferred.resolve(res);
+      return deferred.promise;
+    });
+  };
   return jvcApp.factory('$jvcApi', [
-    '$http', '$q', '$sce', function($http, $q, $sce) {
+    '$http', '$q', '$sce', '$auth', '$mdToast', function($http, $q, $sce, $auth) {
       return {
         getForumsList: function() {
           return loadForums($q, $http);
@@ -680,6 +697,11 @@ jvcApp.config([
               response: res,
               posts: posts
             };
+          });
+        },
+        postContent: function(data) {
+          return $auth.getSID().then(function(sid) {
+            return addNewContent($q, $http, sid, "ABORT", data);
           });
         }
       };
