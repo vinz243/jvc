@@ -18,7 +18,8 @@ jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar
     if not $scope.more or busy then return
     busy = true
     $jvcApi.getTopicList($routeParams.id, page).then (list) ->
-      $scope.posts = list
+      if not $scope.posts then $scope.posts = list
+      else $scope.posts.liste_topics.topic.push item for item in list.liste_topics.topic
       $scope.loading = false
       navbar.setTitle $scope.posts.liste_topics.nom_forum
       if not $scope.$$phase then $scope.$digest()

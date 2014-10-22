@@ -1,5 +1,6 @@
 jvcApp.controller 'ForumsPostCtrl', ['$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', ($scope, $mdToast, $routeParams, navbar, $jvcApi, $state) ->
   $scope.loading = true
+  $('body, html').scrollTop 0
   page = 1
   $scope.more = true
   $scope.urls =
@@ -29,7 +30,8 @@ jvcApp.controller 'ForumsPostCtrl', ['$scope', '$mdToast', '$stateParams', 'navb
     isBusy = true
 
     $jvcApi.getMessageList($routeParams.id, $routeParams.topic,  page).then (data) ->
-      $scope.posts = data.posts
+      if not $scope.posts then $scope.posts = data.posts
+      else $scope.posts.push post for post in data.posts
       navbar.setTitle data.response.detail_topic.sujet_topic
       if not $scope.$$phase then $scope.digest()
       page = page + 1

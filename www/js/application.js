@@ -254,6 +254,7 @@ jvcApp.controller('ForumsPostCtrl', [
   '$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', function($scope, $mdToast, $routeParams, navbar, $jvcApi, $state) {
     var isBusy, page;
     $scope.loading = true;
+    $('body, html').scrollTop(0);
     page = 1;
     $scope.more = true;
     $scope.urls = {
@@ -295,7 +296,16 @@ jvcApp.controller('ForumsPostCtrl', [
       }
       isBusy = true;
       return $jvcApi.getMessageList($routeParams.id, $routeParams.topic, page).then(function(data) {
-        $scope.posts = data.posts;
+        var post, _i, _len, _ref;
+        if (!$scope.posts) {
+          $scope.posts = data.posts;
+        } else {
+          _ref = data.posts;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            post = _ref[_i];
+            $scope.posts.push(post);
+          }
+        }
         navbar.setTitle(data.response.detail_topic.sujet_topic);
         if (!$scope.$$phase) {
           $scope.digest();
@@ -344,7 +354,16 @@ jvcApp.controller('ForumsPostsCtrl', [
       }
       busy = true;
       return $jvcApi.getTopicList($routeParams.id, page).then(function(list) {
-        $scope.posts = list;
+        var item, _i, _len, _ref;
+        if (!$scope.posts) {
+          $scope.posts = list;
+        } else {
+          _ref = list.liste_topics.topic;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            item = _ref[_i];
+            $scope.posts.liste_topics.topic.push(item);
+          }
+        }
         $scope.loading = false;
         navbar.setTitle($scope.posts.liste_topics.nom_forum);
         if (!$scope.$$phase) {

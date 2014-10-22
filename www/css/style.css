@@ -31,7 +31,7 @@ i.toolbar-icon {
 .light md-input-group + i {
   font-size: 25px; }
 
-md-content {
+div[infinite-scroll] {
   margin-bottom: 75px; }
 
 #floating-add-button {
