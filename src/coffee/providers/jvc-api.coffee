@@ -17,7 +17,7 @@ do ->
   @param Q the $q object passed by $jvcAPi factory
   @param mode what to do if busy. ABORT, CONTINUE or WAIT
   ###
-  loadForums = (Q, $http,  mode="ABORT") ->
+  loadForums = (Q, $http, hide={}, mode="ABORT") ->
     deferred = Q.defer()
     if isBusy and mode is "ABORT"
       deferred.reject EBUSY
@@ -45,11 +45,10 @@ do ->
                 sublist.push sub
         else if section.sous_section.ligne?.forum then sublist = section.sous_section.ligne.forum
         else if section.sous_section.ligne then sublist = section.sous_section.ligne
-        for sub in sublist
+        for sub in sublist when hide[sub.id] isnt yes
           _section.subsections.push sub
         forums.push _section
 
-      console.log "resolve"
       deferred.resolve forums
     .catch (data, status, headers, config) ->
       deferred.reject ENET
@@ -191,10 +190,11 @@ do ->
       deferred.promise
 
 
-  jvcApp.factory '$jvcApi', ['$http', '$q', '$sce', '$auth', '$mdToast', ($http, $q, $sce, $auth) ->
+  jvcApp.factory '$jvcApi', ['$http', '$q', '$sce', '$auth','$localstorage', ($http, $q, $sce, $auth, $localstorage) ->
       return {
-        getForumsList: () ->
-          loadForums $q, $http
+        getForumsList: (hide=true) ->
+
+          loadForums $q, $http, ($localstorage.getObject('forums.index.hide') if hide)
 
         getTopicList: (id, page=1, mode="ABORT") ->
           getForumContent($q, $http, mode, id, 0, page).then (list) ->

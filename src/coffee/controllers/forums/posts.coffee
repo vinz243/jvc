@@ -1,4 +1,5 @@
 jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar', '$state', '$jvcApi', ($scope, $http, $routeParams, navbar, $state, $jvcApi) ->
+
   $scope.loading = true
   $scope.urls =
     back: '#/forums'
@@ -14,6 +15,7 @@ jvcApp.controller 'ForumsPostsCtrl', ['$scope', '$http', '$stateParams', 'navbar
   busy = false
   navbar.setTitle 'Veuillez patienter...'
   navbar.setNavButton icon: 'arrow', rotation: 'left', link: 'forums.list'
+
   $scope.loadMoreTopics = ->
     if not $scope.more or busy then return
     busy = true

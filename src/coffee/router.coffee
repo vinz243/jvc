@@ -12,6 +12,10 @@ jvcApp.config ['$stateProvider', '$urlRouterProvider',
         url: '/forums',
         templateUrl: 'partials/forums/index.html',
         controller: 'ForumsIndexCtrl'
+      ).state('forums.edit'
+        url: '/forums/edit',
+        templateUrl: 'partials/forums/edit-index.html',
+        controller: 'EditForumsIndexCtrl'
       ).state('forums.topics',
         abstract: true,
         templateUrl: 'partials/base.html',

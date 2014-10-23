@@ -1,0 +1,18 @@
+<div>
+  <md-card ng-repeat="section in forums">
+    <h4>{{section.name}}</h4>
+    <md-list>
+
+      <md-item ng-repeat="sub in section.subsections">
+        <md-item-content>
+
+          <md-checkbox ng-model="hide[sub.id]" aria-label="{{sub.nom}}">
+            {{sub.nom}}
+          </md-checkbox>
+        </md-item-content>
+      </md-item>
+
+    </md-list>
+  </md-card>
+
+</div>

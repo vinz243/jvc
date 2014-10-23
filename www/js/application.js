@@ -228,14 +228,68 @@ jvcApp.controller('ForumsAddPostsCtrl', [
   }
 ]);
 
+jvcApp.controller('EditForumsIndexCtrl', [
+  '$scope', '$jvcApi', 'navbar', '$localstorage', function($scope, $jvcApi, navbar, $localstorage) {
+    $scope.loading = true;
+    $scope.hide = $localstorage.getObject('forums.index.hide' || {});
+    $scope.$watch('hide', function(value) {
+      return $localstorage.setObject('forums.index.hide', value);
+    }, true);
+    navbar.setTitle('Veuillez patienter...');
+    navbar.setNavButton({
+      icon: 'times',
+      rotation: 'left',
+      link: 'forums.list'
+    });
+    navbar.addButton({
+      icon: 'content-select-all',
+      callback: function() {
+        var section, sub, _i, _len, _ref, _results;
+        _ref = $scope.forums;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          section = _ref[_i];
+          _results.push((function() {
+            var _j, _len1, _ref1, _results1;
+            _ref1 = section.subsections;
+            _results1 = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              sub = _ref1[_j];
+              _results1.push($scope.hide[sub.id] = true);
+            }
+            return _results1;
+          })());
+        }
+        return _results;
+      }
+    });
+    return setTimeout(function() {
+      return $jvcApi.getForumsList(false).then(function(forums) {
+        $scope.forums = forums;
+        $scope.loading = false;
+        navbar.setTitle('Cacher des sections');
+        if (!$scope.$$phase) {
+          return $scope.$digest();
+        }
+      });
+    }, 600);
+  }
+]);
+
 jvcApp.controller('ForumsIndexCtrl', [
-  '$scope', '$jvcApi', 'navbar', function($scope, $jvcApi, navbar) {
+  '$scope', '$jvcApi', 'navbar', '$state', function($scope, $jvcApi, navbar, $state) {
     $scope.loading = true;
     navbar.setTitle('Veuillez patienter...');
     navbar.setNavButton({
       icon: 'arrow',
       rotation: 'left',
       link: 'index'
+    });
+    navbar.addButton({
+      icon: 'image-tune',
+      callback: function() {
+        return $state.go('forums.edit');
+      }
     });
     return setTimeout(function() {
       return $jvcApi.getForumsList().then(function(forums) {
@@ -389,6 +443,10 @@ jvcApp.config([
       url: '/forums',
       templateUrl: 'partials/forums/index.html',
       controller: 'ForumsIndexCtrl'
+    }).state('forums.edit', {
+      url: '/forums/edit',
+      templateUrl: 'partials/forums/edit-index.html',
+      controller: 'EditForumsIndexCtrl'
     }).state('forums.topics', {
       abstract: true,
       templateUrl: 'partials/base.html'
@@ -476,8 +534,11 @@ jvcApp.config([
   @param Q the $q object passed by $jvcAPi factory
   @param mode what to do if busy. ABORT, CONTINUE or WAIT
    */
-  loadForums = function(Q, $http, mode) {
+  loadForums = function(Q, $http, hide, mode) {
     var deferred;
+    if (hide == null) {
+      hide = {};
+    }
     if (mode == null) {
       mode = "ABORT";
     }
@@ -524,11 +585,12 @@ jvcApp.config([
         }
         for (_m = 0, _len4 = sublist.length; _m < _len4; _m++) {
           sub = sublist[_m];
-          _section.subsections.push(sub);
+          if (hide[sub.id] !== true) {
+            _section.subsections.push(sub);
+          }
         }
         forums.push(_section);
       }
-      console.log("resolve");
       return deferred.resolve(forums);
     })["catch"](function(data, status, headers, config) {
       return deferred.reject(ENET);
@@ -661,10 +723,13 @@ jvcApp.config([
     });
   };
   return jvcApp.factory('$jvcApi', [
-    '$http', '$q', '$sce', '$auth', '$mdToast', function($http, $q, $sce, $auth) {
+    '$http', '$q', '$sce', '$auth', '$localstorage', function($http, $q, $sce, $auth, $localstorage) {
       return {
-        getForumsList: function() {
-          return loadForums($q, $http);
+        getForumsList: function(hide) {
+          if (hide == null) {
+            hide = true;
+          }
+          return loadForums($q, $http, (hide ? $localstorage.getObject('forums.index.hide') : void 0));
         },
         getTopicList: function(id, page, mode) {
           if (page == null) {

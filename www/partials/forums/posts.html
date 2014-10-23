@@ -1,4 +1,4 @@
-<div ng-controller="ForumsPostsCtrl">
+<div>
   <div infinite-scroll="loadMoreTopics()">
     <md-card ng-repeat="topic in posts.liste_topics.topic" ui-sref="forums.topics.view({id: {{topic.fid}}, topic: {{topic.id}}})">
       <h4>{{topic.titre}}</h4>

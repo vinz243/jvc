@@ -1,5 +1,5 @@
-<div ng-controller="ForumsIndexCtrl">
-  <md-card ng-repeat="section in forums">
+<div>
+  <md-card ng-repeat="section in forums" ng-if="section.subsections.length !== 0">
     <h4>{{section.name}}</h4>
     <md-list>
 
@@ -18,5 +18,3 @@
   </div>
 
 </div>
-
-
