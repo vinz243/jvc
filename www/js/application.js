@@ -305,7 +305,7 @@ jvcApp.controller('ForumsIndexCtrl', [
 ]);
 
 jvcApp.controller('ForumsPostCtrl', [
-  '$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', function($scope, $mdToast, $routeParams, navbar, $jvcApi, $state) {
+  '$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', '$bookmarks', function($scope, $mdToast, $routeParams, navbar, $jvcApi, $state, $bookmarks) {
     var isBusy, page;
     $scope.loading = true;
     $('body, html').scrollTop(0);
@@ -322,8 +322,24 @@ jvcApp.controller('ForumsPostCtrl', [
       link: 'forums.topics.list({id: "' + $routeParams.id + '"})'
     });
     navbar.addButton({
-      icon: 'communication-textsms',
-      callback: function() {}
+      icon: "action-bookmark" + (!$bookmarks.has($routeParams.id, $routeParams.topic) ? '-outline' : ''),
+      callback: function() {
+        if ($scope.title) {
+          if (!$bookmarks.has($routeParams.id, $routeParams.topic)) {
+            $bookmarks.add($routeParams.id, $routeParams.topic, $scope.title);
+            return $mdToast.show({
+              template: "<md-toast>Le topic a bien été ajouté au marque-page</md-toast>",
+              hideDelay: 3000
+            });
+          } else {
+            $bookmarks.remove($routeParams.id, $routeParams.topic);
+            return $mdToast.show({
+              template: "<md-toast>Le topic a bien été supprimé de vos marque-pages</md-toast>",
+              hideDelay: 3000
+            });
+          }
+        }
+      }
     });
     $scope.sendMessage = function($event) {
       var params;
@@ -360,7 +376,10 @@ jvcApp.controller('ForumsPostCtrl', [
             $scope.posts.push(post);
           }
         }
-        navbar.setTitle(data.response.detail_topic.sujet_topic);
+        if (!$scope.title) {
+          navbar.setTitle(data.response.detail_topic.sujet_topic);
+          $scope.title = data.response.detail_topic.sujet_topic;
+        }
         if (!$scope.$$phase) {
           $scope.digest();
         }
@@ -485,6 +504,54 @@ jvcApp.config([
       });
     };
   });
+})();
+
+(function() {
+  var LS_KEY;
+  LS_KEY = 'forums.posts.bookmarks';
+  return jvcApp.factory("$bookmarks", [
+    "$localstorage", function($localstorage) {
+      return {
+        add: function(forumId, topicId, subject) {
+          var bookmarks;
+          bookmarks = $localstorage.getObject(LS_KEY);
+          if (!bookmarks.topics) {
+            bookmarks.topics = [];
+          }
+          bookmarks.topics.push({
+            forumId: forumId,
+            topicId: topicId,
+            subject: subject
+          });
+          return $localstorage.setObject(LS_KEY, bookmarks);
+        },
+        get: function() {
+          return $localstorage.getObject(LS_KEY).topics || [];
+        },
+        has: function(forumId, topicId) {
+          var bookmarks, topic, _i, _len, _ref;
+          bookmarks = $localstorage.getObject(LS_KEY);
+          _ref = bookmarks.topics || [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            topic = _ref[_i];
+            if (topic.topicId === topicId && topic.forumId === forumId) {
+              return true;
+            }
+          }
+          return false;
+        },
+        remove: function(forumId, topicId) {
+          var bookmarks;
+          bookmarks = $localstorage.getObject(LS_KEY);
+          bookmarks.topics = bookmarks.topics.filter(function(element) {
+            return element.forumId !== forumId && element.topicId !== topicId;
+          });
+          console.log(bookmarks);
+          return $localstorage.setObject(LS_KEY, bookmarks);
+        }
+      };
+    }
+  ]);
 })();
 
 (function() {
