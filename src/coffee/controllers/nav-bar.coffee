@@ -5,8 +5,8 @@ do ->
     buttonCallback = {}
     $rootScope.$on '$stateChangeSuccess', ->
       $scope.buttons = []
+
     $scope.call = (uid) ->
-      console.log uid, buttonCallback
       buttonCallback[uid]()
 
     navbar.addHook "onTitle", (newTitle) ->
@@ -17,7 +17,7 @@ do ->
       icon.color opts.color or "#fff"
       icon.size opts.size or 30
       icon.rotate opts.rotation or "up"
-      $scope.leftLink = opts.link or ""
+      $scope.navButtonCallback = opts.callback or ->
       $scope.$digest() unless $scope.$$phase
 
     navbar.addHook 'onButton', (opts) ->

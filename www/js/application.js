@@ -171,7 +171,6 @@ jvcApp.controller('IndexCtrl', [
         return $scope.buttons = [];
       });
       $scope.call = function(uid) {
-        console.log(uid, buttonCallback);
         return buttonCallback[uid]();
       };
       navbar.addHook("onTitle", function(newTitle) {
@@ -182,7 +181,7 @@ jvcApp.controller('IndexCtrl', [
         icon.color(opts.color || "#fff");
         icon.size(opts.size || 30);
         icon.rotate(opts.rotation || "up");
-        $scope.leftLink = opts.link || "";
+        $scope.navButtonCallback = opts.callback || function() {};
         if (!$scope.$$phase) {
           return $scope.$digest();
         }
@@ -289,8 +288,8 @@ jvcApp.controller('ForumsIndexCtrl', [
     $scope.loading = true;
     navbar.setTitle('Veuillez patienter...');
     navbar.setNavButton({
-      icon: 'arrow',
-      rotation: 'left',
+      icon: 'bars',
+      rotation: 'up',
       link: 'index'
     });
     navbar.addButton({
@@ -461,11 +460,7 @@ jvcApp.controller('ForumsPostsCtrl', [
 
 jvcApp.config([
   '$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
-    $stateProvider.state('index', {
-      url: '/',
-      templateUrl: 'partials/index.html',
-      controller: 'IndexCtrl'
-    }).state('forums', {
+    $stateProvider.state('forums', {
       abstract: 'true',
       templateUrl: 'partials/base.html'
     }).state('forums.list', {
@@ -493,7 +488,7 @@ jvcApp.config([
       controller: 'ForumsAddPostsCtrl',
       containerClass: 'new-topic-route'
     });
-    return $urlRouterProvider.otherwise('/');
+    return $urlRouterProvider.otherwise('/forums');
   }
 ]);
 
@@ -1147,7 +1142,7 @@ jvcApp.service("$md5", [
   };
   listeners = {};
   return jvcApp.factory("navbar", [
-    '$rootScope', function($rootScope) {
+    '$rootScope', '$state', function($rootScope, $state) {
       navbar = {
         title: "...",
         buttons: []
@@ -1193,6 +1188,21 @@ jvcApp.service("$md5", [
         },
         setNavButton: function(opts) {
           var call, _i, _len, _ref, _results;
+          if (opts.link) {
+            opts.callback = function() {
+              var params, val;
+              params = {};
+              val = opts.link;
+              val = val.replace(/\{\{(.+)\}\}/g, function(str, val) {
+                return eval('scope.' + val);
+              });
+              val = val.replace(/\((.+)\)/, function(str, value) {
+                params = eval("(" + value + ")");
+                return "";
+              });
+              return $state.go(val, params);
+            };
+          }
           navbar.navButton = opts;
           _ref = listeners.onNavButton;
           _results = [];

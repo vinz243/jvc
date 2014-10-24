@@ -4,7 +4,7 @@ do ->
     buttons: []
   }
   listeners = {}
-  jvcApp.factory "navbar", ['$rootScope', ($rootScope)->
+  jvcApp.factory "navbar", ['$rootScope', '$state', ($rootScope, $state)->
 
     navbar = {
       title: "..."
@@ -27,6 +27,17 @@ do ->
 
 
       setNavButton: (opts) ->
+        if opts.link
+          opts.callback = ->
+            params = {}
+            val = opts.link
+            val = val.replace /\{\{(.+)\}\}/g, (str, val) ->
+              return eval 'scope.' + val
+            val = val.replace /\((.+)\)/, (str, value) ->
+              params = eval "(" + value + ")"
+              ""
+            $state.go val,  params
+
         navbar.navButton = opts
         call(opts) for call in listeners.onNavButton
 

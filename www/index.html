@@ -29,7 +29,7 @@
     <div class="navbar" ng-controller="NavBarCtrl">
         <md-toolbar class="md-theme-light">
           <h2 class="md-toolbar-tools">
-            <a go-click="{{leftLink}}"> <i id="left-nav-icon"></i></a>
+            <a ng-click="navButtonCallback()"> <i id="left-nav-icon"></i></a>
             <span ng-cloack="Loading">{{title}}</span>
 
             <span flex></span>
