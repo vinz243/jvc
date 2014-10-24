@@ -100,10 +100,9 @@ do ->
         "Content-Type": "application/x-www-form-urlencoded"
     )
 
-  promptCaptchaAndPost = ($http, params, content, subject, captcha) ->
+  promptCaptchaAndPost = ($http, $mdDialog, params, content, subject, captcha, opts) ->
     $mdDialog.show(
       controller: 'CaptchaDialogCtrl',
-      event: $event,
       clickOutsideToClose: false,
       template: """
           <md-dialog>
@@ -111,7 +110,7 @@ do ->
                <div >
                   Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br /> <br />
                   <div layout="horizontal" layout-align="center" padding>
-                    <img src="#{data.new_topic.erreur.captcha}" />
+                    <img src="#{captcha}" />
                   </div>
                   <br />
                   <br />
@@ -140,9 +139,10 @@ do ->
           "Content-Type": "application/x-www-form-urlencoded"
       )
     .then (res) ->
+      data = xml2json res.data
       if data["new_#{if opts.topicId then 'message' else 'topic'}"]?.erreur?.captcha
         params = data["new_#{if opts.topicId then 'message' else 'topic'}"].params_form
-        return promptCaptchaAndPost($http, params, content, subject, captcha)
+        return promptCaptchaAndPost $http, $mdDialog, params, content, subject, data.new_topic.erreur.captcha, opts
       return {status: "done"}
 
 
@@ -153,7 +153,7 @@ do ->
     body    the message body
     title   the message subject if it's a new topic
   ###
-  addNewContent = ($q, $http, sid, mode, opts) ->
+  addNewContent = ($q, $mdDialog, $http, sid, mode, opts) ->
 
     getPostParams($http, opts.forumId, opts.topicId).then (res)->
       # Wait 1"
@@ -181,7 +181,7 @@ do ->
       if data.new_topic?.erreur?.captcha
         params = data.new_topic.params_form
 
-        return promptCaptchaAndPost($http, params, opts.body, opts.title)
+        return promptCaptchaAndPost $http, $mdDialog, params, opts.body, opts.title, data.new_topic.erreur.captcha, opts
 
       else if data.new_topic?.erreur
         deferred.reject data.new_topic.erreur.texte_erreur
@@ -190,7 +190,7 @@ do ->
       deferred.promise
 
 
-  jvcApp.factory '$jvcApi', ['$http', '$q', '$sce', '$auth','$localstorage', ($http, $q, $sce, $auth, $localstorage) ->
+  jvcApp.factory '$jvcApi', ['$http', '$q', '$mdDialog', '$sce', '$auth','$localstorage', ($http, $q, $mdDialog, $sce, $auth, $localstorage) ->
       return {
         getForumsList: (hide=true) ->
 
@@ -227,7 +227,7 @@ do ->
             return {response: res, posts: posts}
         postContent: (data) ->
           $auth.getSID().then (sid) ->
-            addNewContent($q, $http, sid, "ABORT", data)
+            addNewContent($q, $mdDialog, $http, sid, "ABORT", data)
 
       }
 

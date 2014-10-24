@@ -209,7 +209,7 @@ jvcApp.controller('IndexCtrl', [
 })();
 
 jvcApp.controller('ForumsAddPostsCtrl', [
-  '$scope', '$stateParams', 'navbar', '$auth', '$jvcApi', '$mdToast', '$state', function($scope, $routeParams, navbar, $auth, $jvcApi, $mdDialog, $mdToast, $state) {
+  '$scope', '$stateParams', 'navbar', '$auth', '$jvcApi', '$mdToast', '$state', function($scope, $routeParams, navbar, $auth, $jvcApi, $mdToast, $state) {
     navbar.setTitle('Créer un nouveau sujet');
     navbar.setNavButton({
       icon: 'times',
@@ -221,7 +221,7 @@ jvcApp.controller('ForumsAddPostsCtrl', [
       return $jvcApi.postContent({
         forumId: $routeParams.id,
         body: $scope.content,
-        subject: $scope.subject
+        title: $scope.subject
       }).then(function(res) {
         return $state.go('forums.topics.list', {
           id: $routeParams.id
@@ -736,12 +736,11 @@ jvcApp.config([
       }
     });
   };
-  promptCaptchaAndPost = function($http, params, content, subject, captcha) {
+  promptCaptchaAndPost = function($http, $mdDialog, params, content, subject, captcha, opts) {
     return $mdDialog.show({
       controller: 'CaptchaDialogCtrl',
-      event: $event,
       clickOutsideToClose: false,
-      template: "<md-dialog>\n   <div class=\"dialog-content\">\n     <div >\n        Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br /> <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <img src=\"" + data.new_topic.erreur.captcha + "\" />\n        </div>\n        <br />\n        <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <md-text-float label=\"Votre r&eacute;ponse\" ng-model=\"code\"> </md-text-float>\n        </div>\n     </div>\n   </div>\n   <div class=\"dialog-actions\">\n    <md-button ng-click=\"cancel()\">\n      Annuler\n    </md-button>\n    <md-button ng-click=\"validate()\" class=\"md-theme-green\">\n      Valider\n    </md-button>\n  </div>\n</md-dialog>"
+      template: "<md-dialog>\n   <div class=\"dialog-content\">\n     <div >\n        Votre compte a moins de deux mois d'activit&eacute;.<br /> Veuillez remplir ce captcha d'abord <br /> <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <img src=\"" + captcha + "\" />\n        </div>\n        <br />\n        <br />\n        <div layout=\"horizontal\" layout-align=\"center\" padding>\n          <md-text-float label=\"Votre r&eacute;ponse\" ng-model=\"code\"> </md-text-float>\n        </div>\n     </div>\n   </div>\n   <div class=\"dialog-actions\">\n    <md-button ng-click=\"cancel()\">\n      Annuler\n    </md-button>\n    <md-button ng-click=\"validate()\" class=\"md-theme-green\">\n      Valider\n    </md-button>\n  </div>\n</md-dialog>"
     }).then(function(r) {
       return $http({
         method: "POST",
@@ -753,10 +752,11 @@ jvcApp.config([
         }
       });
     }).then(function(res) {
-      var _ref, _ref1;
+      var data, _ref, _ref1;
+      data = xml2json(res.data);
       if ((_ref = data["new_" + (opts.topicId ? 'message' : 'topic')]) != null ? (_ref1 = _ref.erreur) != null ? _ref1.captcha : void 0 : void 0) {
         params = data["new_" + (opts.topicId ? 'message' : 'topic')].params_form;
-        return promptCaptchaAndPost($http, params, content, subject, captcha);
+        return promptCaptchaAndPost($http, $mdDialog, params, content, subject, data.new_topic.erreur.captcha, opts);
       }
       return {
         status: "done"
@@ -771,7 +771,7 @@ jvcApp.config([
     body    the message body
     title   the message subject if it's a new topic
    */
-  addNewContent = function($q, $http, sid, mode, opts) {
+  addNewContent = function($q, $mdDialog, $http, sid, mode, opts) {
     return getPostParams($http, opts.forumId, opts.topicId).then(function(res) {
       var data, deferred, params;
       deferred = $q.defer();
@@ -790,7 +790,7 @@ jvcApp.config([
       deferred = $q.defer();
       if ((_ref = data.new_topic) != null ? (_ref1 = _ref.erreur) != null ? _ref1.captcha : void 0 : void 0) {
         params = data.new_topic.params_form;
-        return promptCaptchaAndPost($http, params, opts.body, opts.title);
+        return promptCaptchaAndPost($http, $mdDialog, params, opts.body, opts.title, data.new_topic.erreur.captcha, opts);
       } else if ((_ref2 = data.new_topic) != null ? _ref2.erreur : void 0) {
         deferred.reject(data.new_topic.erreur.texte_erreur);
       }
@@ -799,7 +799,7 @@ jvcApp.config([
     });
   };
   return jvcApp.factory('$jvcApi', [
-    '$http', '$q', '$sce', '$auth', '$localstorage', function($http, $q, $sce, $auth, $localstorage) {
+    '$http', '$q', '$mdDialog', '$sce', '$auth', '$localstorage', function($http, $q, $mdDialog, $sce, $auth, $localstorage) {
       return {
         getForumsList: function(hide) {
           if (hide == null) {
@@ -861,7 +861,7 @@ jvcApp.config([
         },
         postContent: function(data) {
           return $auth.getSID().then(function(sid) {
-            return addNewContent($q, $http, sid, "ABORT", data);
+            return addNewContent($q, $mdDialog, $http, sid, "ABORT", data);
           });
         }
       };
