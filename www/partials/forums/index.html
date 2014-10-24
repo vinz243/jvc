@@ -1,20 +1,28 @@
-<div>
+<md-sidenav class="md-sidenav-left md-whiteframe-z2" component-id="left" is-locked-open="$media('md')">
+  <md-toolbar class="md-theme-indigo">
+    <h1 class="md-toolbar-tools">Forums</h1>
+  </md-toolbar>
+  <div class="sidenav-item">
+    <a ui-sref="forums.bookmarks">
+      <i class="mdi-action-book sidenav-icon">
+      </i>
+      <span>Topics marqués</span>
+    </a>
+  </div>
+</md-sidenav>
+<md-content>
   <md-card ng-repeat="section in forums" ng-if="section.subsections.length !== 0">
     <h4>{{section.name}}</h4>
     <md-list>
-
       <md-item ng-repeat="sub in section.subsections">
         <md-item-content>
-          <a ui-sref="forums.topics.list({id: sub.id})" class="eight wide column">
-               {{sub.nom}}
-            </a>
+          <a ui-sref="forums.topics.list({id: sub.id})" class="eight wide column">               {{sub.nom}}            </a>
         </md-item-content>
       </md-item>
-
     </md-list>
   </md-card>
   <div layout="horizontal" layout-align="center">
-    <md-progress-circular mode="indeterminate" ng-if="loading"></md-progress-circular>
+    <md-progress-circular mode="indeterminate" ng-if="loading">
+    </md-progress-circular>
   </div>
-
-</div>
+</md-content>

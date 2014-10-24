@@ -1,9 +1,14 @@
-jvcApp.controller 'ForumsIndexCtrl', ['$scope', '$jvcApi', 'navbar', '$state', ($scope, $jvcApi, navbar, $state) ->
+jvcApp.controller 'ForumsIndexCtrl', ['$scope', '$jvcApi', 'navbar', '$state', '$mdSidenav', ($scope, $jvcApi, navbar, $state, $mdSidenav) ->
   $scope.loading = true
 
   navbar.setTitle 'Veuillez patienter...'
-  navbar.setNavButton icon: 'arrow', rotation: 'left', link: 'index'
-
+  navbar.setNavButton icon: 'bars', rotation: 'up', callback: ->
+    isOpen = $mdSidenav('left').isOpen()
+    console.log isOpen
+    if isOpen
+      $mdSidenav('left').close()
+    else
+      $mdSidenav('left').open()
   navbar.addButton icon: 'image-tune', callback: -> $state.go 'forums.edit'
   setTimeout ->
     $jvcApi.getForumsList().then (forums) ->

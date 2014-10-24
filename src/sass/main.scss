@@ -47,6 +47,17 @@ i.toolbar-icon {
     font-size: 25px;
   }
 }
+.sidenav-item {
+  padding: 15px;
+  i {
+    font-size: 30px;
+
+  }
+  span{
+    font-size: 20px;
+    vertical-align: 5px;
+  }
+}
 div[infinite-scroll] {
   margin-bottom: 75px;
 }

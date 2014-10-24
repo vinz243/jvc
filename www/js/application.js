@@ -235,6 +235,18 @@ jvcApp.controller('ForumsAddPostsCtrl', [
   }
 ]);
 
+jvcApp.controller('BookmarksIndexCtrl', [
+  '$bookmarks', '$scope', 'navbar', function($bookmarks, $scope, navbar) {
+    $scope.bookmarks = $bookmarks.get();
+    navbar.setTitle('Topics marqués');
+    return navbar.setNavButton({
+      icon: 'times',
+      rotation: 'left',
+      link: 'forums.list'
+    });
+  }
+]);
+
 jvcApp.controller('EditForumsIndexCtrl', [
   '$scope', '$jvcApi', 'navbar', '$localstorage', function($scope, $jvcApi, navbar, $localstorage) {
     $scope.loading = true;
@@ -284,13 +296,22 @@ jvcApp.controller('EditForumsIndexCtrl', [
 ]);
 
 jvcApp.controller('ForumsIndexCtrl', [
-  '$scope', '$jvcApi', 'navbar', '$state', function($scope, $jvcApi, navbar, $state) {
+  '$scope', '$jvcApi', 'navbar', '$state', '$mdSidenav', function($scope, $jvcApi, navbar, $state, $mdSidenav) {
     $scope.loading = true;
     navbar.setTitle('Veuillez patienter...');
     navbar.setNavButton({
       icon: 'bars',
       rotation: 'up',
-      link: 'index'
+      callback: function() {
+        var isOpen;
+        isOpen = $mdSidenav('left').isOpen();
+        console.log(isOpen);
+        if (isOpen) {
+          return $mdSidenav('left').close();
+        } else {
+          return $mdSidenav('left').open();
+        }
+      }
     });
     navbar.addButton({
       icon: 'image-tune',
@@ -467,6 +488,10 @@ jvcApp.config([
       url: '/forums',
       templateUrl: 'partials/forums/index.html',
       controller: 'ForumsIndexCtrl'
+    }).state('forums.bookmarks', {
+      url: '/forums/bookmarks',
+      templateUrl: 'partials/forums/bookmarks.html',
+      controller: 'BookmarksIndexCtrl'
     }).state('forums.edit', {
       url: '/forums/edit',
       templateUrl: 'partials/forums/edit-index.html',

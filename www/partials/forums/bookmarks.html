@@ -1,0 +1,7 @@
+<div>
+  <div>
+    <md-card ng-repeat="topic in bookmarks" ui-sref="forums.topics.view({id: {{topic.forumId}}, topic: {{topic.topicId}}})">
+      <h4>{{topic.subject}}</h4>
+    </md-card>
+  </div>
+</div>

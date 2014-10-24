@@ -6,7 +6,6 @@ jvcApp.controller 'EditForumsIndexCtrl', ['$scope', '$jvcApi', 'navbar', '$local
   , true
   navbar.setTitle 'Veuillez patienter...'
   navbar.setNavButton icon: 'times', rotation: 'left', link: 'forums.list'
-
   navbar.addButton icon: 'content-select-all', callback: ->
     for section in $scope.forums
       for sub in section.subsections
