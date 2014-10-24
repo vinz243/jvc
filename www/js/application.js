@@ -188,13 +188,21 @@ jvcApp.controller('IndexCtrl', [
         }
       });
       return navbar.addHook('onButton', function(opts) {
-        var uid;
-        uid = Math.floor(Math.random() * 1e26).toString(36);
-        $scope.buttons.push({
-          icon: opts.icon,
-          uid: uid
-        });
-        buttonCallback[uid] = opts.callback;
+        var button, _i, _len, _ref;
+        if (opts.type !== 'change') {
+          $scope.buttons.push({
+            icon: opts.icon,
+            uid: opts.uid
+          }, buttonCallback[opts.uid] = opts.callback);
+        } else {
+          _ref = $scope.buttons;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            button = _ref[_i];
+            if (button.uid === opts.uid) {
+              button.icon = opts.icon;
+            }
+          }
+        }
       });
     }
   ]);
@@ -306,7 +314,7 @@ jvcApp.controller('ForumsIndexCtrl', [
 
 jvcApp.controller('ForumsPostCtrl', [
   '$scope', '$mdToast', '$stateParams', 'navbar', '$jvcApi', '$state', '$bookmarks', function($scope, $mdToast, $routeParams, navbar, $jvcApi, $state, $bookmarks) {
-    var isBusy, page;
+    var bookmarkButton, isBusy, page;
     $scope.loading = true;
     $('body, html').scrollTop(0);
     page = 1;
@@ -321,22 +329,24 @@ jvcApp.controller('ForumsPostCtrl', [
       rotation: 'left',
       link: 'forums.topics.list({id: "' + $routeParams.id + '"})'
     });
-    navbar.addButton({
+    bookmarkButton = navbar.addButton({
       icon: "action-bookmark" + (!$bookmarks.has($routeParams.id, $routeParams.topic) ? '-outline' : ''),
       callback: function() {
         if ($scope.title) {
           if (!$bookmarks.has($routeParams.id, $routeParams.topic)) {
             $bookmarks.add($routeParams.id, $routeParams.topic, $scope.title);
-            return $mdToast.show({
+            $mdToast.show({
               template: "<md-toast>Le topic a bien été ajouté au marque-page</md-toast>",
               hideDelay: 3000
             });
+            return bookmarkButton.setIcon('action-bookmark');
           } else {
             $bookmarks.remove($routeParams.id, $routeParams.topic);
-            return $mdToast.show({
+            $mdToast.show({
               template: "<md-toast>Le topic a bien été supprimé de vos marque-pages</md-toast>",
               hideDelay: 3000
             });
+            return bookmarkButton.setIcon('action-bookmark-outline');
           }
         }
       }
@@ -546,7 +556,6 @@ jvcApp.config([
           bookmarks.topics = bookmarks.topics.filter(function(element) {
             return element.forumId !== forumId && element.topicId !== topicId;
           });
-          console.log(bookmarks);
           return $localstorage.setObject(LS_KEY, bookmarks);
         }
       };
@@ -1156,15 +1165,31 @@ jvcApp.service("$md5", [
           return _results;
         },
         addButton: function(opts) {
-          var call, _i, _len, _ref, _results;
+          var call, _i, _len, _ref;
+          opts.uid = Math.floor(Math.random() * 1e26).toString(36);
+          opts.type = 'new';
           navbar.buttons.push(opts);
           _ref = listeners.onButton;
-          _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             call = _ref[_i];
-            _results.push(call(opts));
+            call(opts);
           }
-          return _results;
+          return {
+            setIcon: function(icon) {
+              var _j, _len1, _ref1, _results;
+              _ref1 = listeners.onButton;
+              _results = [];
+              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+                call = _ref1[_j];
+                _results.push(call({
+                  icon: icon,
+                  uid: opts.uid,
+                  type: 'change'
+                }));
+              }
+              return _results;
+            }
+          };
         },
         setNavButton: function(opts) {
           var call, _i, _len, _ref, _results;

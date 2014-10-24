@@ -21,13 +21,15 @@ do ->
       $scope.$digest() unless $scope.$$phase
 
     navbar.addHook 'onButton', (opts) ->
-      uid = Math.floor(Math.random() * 1e26).toString 36
+      if opts.type isnt 'change'
+        $scope.buttons.push
+          icon: opts.icon
+          uid: opts.uid
 
-      $scope.buttons.push
-        icon: opts.icon
-        uid: uid
-
-      buttonCallback[uid] = opts.callback
+          buttonCallback[opts.uid] = opts.callback
+      else
+        for button in $scope.buttons when button.uid is opts.uid
+          button.icon = opts.icon
       return
 
   ]

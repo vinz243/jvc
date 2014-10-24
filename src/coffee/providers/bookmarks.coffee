@@ -27,7 +27,6 @@ do ->
           bookmarks = $localstorage.getObject LS_KEY
           bookmarks.topics = bookmarks.topics.filter (element) ->
             return element.forumId isnt forumId and element.topicId isnt topicId
-          console.log bookmarks
           $localstorage.setObject LS_KEY, bookmarks
       )
   ]

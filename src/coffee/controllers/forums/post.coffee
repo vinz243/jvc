@@ -8,18 +8,20 @@ jvcApp.controller 'ForumsPostCtrl', ['$scope', '$mdToast', '$stateParams', 'navb
   $scope.id = $routeParams.id
   navbar.setTitle 'Veuillez patienter...'
   navbar.setNavButton icon: 'arrow', rotation: 'left', link: 'forums.topics.list({id: "'+$routeParams.id+'"})'
-  navbar.addButton icon: "action-bookmark#{if not $bookmarks.has $routeParams.id, $routeParams.topic then '-outline' else ''}", callback: ->
+  bookmarkButton = navbar.addButton icon: "action-bookmark#{if not $bookmarks.has $routeParams.id, $routeParams.topic then '-outline' else ''}", callback: ->
     if $scope.title
       if not $bookmarks.has $routeParams.id, $routeParams.topic
         $bookmarks.add $routeParams.id, $routeParams.topic, $scope.title
         $mdToast.show
           template: "<md-toast>Le topic a bien été ajouté au marque-page</md-toast>",
           hideDelay: 3000
+        bookmarkButton.setIcon 'action-bookmark'
       else
         $bookmarks.remove $routeParams.id, $routeParams.topic
         $mdToast.show
           template: "<md-toast>Le topic a bien été supprimé de vos marque-pages</md-toast>",
           hideDelay: 3000
+        bookmarkButton.setIcon 'action-bookmark-outline'
 
 
 
