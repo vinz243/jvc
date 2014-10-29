@@ -1,10 +1,11 @@
 var config, jvcApp;
 
+console.log('Running Application...');
+
 jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll']);
 
 config = {
-  domain: "http://" + (window.location.host.split(':')[0]) + ":8101",
-  host: "" + (window.location.host.split(':')[0]) + ":8101"
+  domain: "http://ws.jeuxvideo.com"
 };
 
 jvcApp.config([
@@ -15,6 +16,7 @@ jvcApp.config([
 
 jvcApp.run([
   '$rootScope', function($rootScope) {
+    console.log('Run fired!');
     $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
       return $rootScope.containerClass = toState.containerClass;
     });
@@ -319,14 +321,22 @@ jvcApp.controller('ForumsIndexCtrl', [
         return $state.go('forums.edit');
       }
     });
+    console.log('Hey!');
     return setTimeout(function() {
+      console.log('Getting list');
       return $jvcApi.getForumsList().then(function(forums) {
+        console.log('Got it!');
         $scope.forums = forums;
         $scope.loading = false;
         navbar.setTitle('Liste des forums');
         if (!$scope.$$phase) {
           return $scope.$digest();
         }
+      })["catch"](function(data, status, headers, config) {
+        console.log(data);
+        console.log(status);
+        console.log(headers);
+        return console.log(config);
       });
     }, 600);
   }

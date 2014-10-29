@@ -1,8 +1,8 @@
-
+console.log 'Running Application...'
 jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll'])
 config =
-  domain: "http://#{window.location.host.split(':')[0]}:8101"
-  host: "#{window.location.host.split(':')[0]}:8101"
+  domain: "http://ws.jeuxvideo.com"
+  # host: "#{window.location.host.split(':')[0]}:8101"
 
 jvcApp.config ['$httpProvider', ($httpProvider) ->
 
@@ -11,7 +11,7 @@ jvcApp.config ['$httpProvider', ($httpProvider) ->
     return
 ]
 jvcApp.run ['$rootScope', ($rootScope) ->
-
+    console.log 'Run fired!'
     $rootScope.$on '$stateChangeSuccess', (event, toState, toParams, fromState, fromParams) ->
       $rootScope.containerClass = toState.containerClass;
     return
