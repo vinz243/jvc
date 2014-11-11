@@ -1,8 +1,8 @@
 
 jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll'])
 config =
-  domain: "http://#{window.location.host.split(':')[0]}:8101"
-  host: "#{window.location.host.split(':')[0]}:8101"
+  domain: "http://%INET_ADDR%"
+  host: "%INET_ADDR%"
 
 jvcApp.config ['$httpProvider', ($httpProvider) ->
 

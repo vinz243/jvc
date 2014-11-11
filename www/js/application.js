@@ -3,8 +3,8 @@ var config, jvcApp;
 jvcApp = angular.module('jvc', ['ui.router', 'ngMaterial', 'infinite-scroll']);
 
 config = {
-  domain: "http://" + (window.location.host.split(':')[0]) + ":8101",
-  host: "" + (window.location.host.split(':')[0]) + ":8101"
+  domain: "http://ws.jeuxvideo.com",
+  host: "ws.jeuxvideo.com"
 };
 
 jvcApp.config([
@@ -644,6 +644,7 @@ jvcApp.config([
       return deferred.promise;
     }
     isBusy = true;
+    console.log('GET ' + config.domain + '/forums_index.xml');
     $http.get(config.domain + '/forums_index.xml').then(function(data) {
       var forums, list, sec, section, sub, sublist, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _section;
       list = xml2json(data.data);
@@ -689,6 +690,7 @@ jvcApp.config([
       }
       return deferred.resolve(forums);
     })["catch"](function(data, status, headers, config) {
+      console.log('Error with http');
       return deferred.reject(ENET);
     })["finally"](function() {
       return isBusy = false;

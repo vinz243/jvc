@@ -24,7 +24,7 @@ do ->
       return deferred.promise
 
     isBusy = true
-
+    console.log 'GET ' + config.domain + '/forums_index.xml'
     $http.get(config.domain + '/forums_index.xml').then (data) ->
       list = xml2json(data.data)
       # normalize
@@ -51,6 +51,7 @@ do ->
 
       deferred.resolve forums
     .catch (data, status, headers, config) ->
+      console.log 'Error with http'
       deferred.reject ENET
     .finally ->
       isBusy = false
